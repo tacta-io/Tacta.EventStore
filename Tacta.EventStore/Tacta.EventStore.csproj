@@ -2,6 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>Nuget package for handling domain, event store and projections</Description>
+    <RepositoryUrl>https://github.com/tacta-io/Tacta.EventStore</RepositoryUrl>
+    <PackageTags>eventstore, eventsourcing, ddd, domain, projections, projector</PackageTags>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <Company>tacta.io</Company>
+    <Authors>tacta.io</Authors>
+    <PackageIcon></PackageIcon>
+    <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
