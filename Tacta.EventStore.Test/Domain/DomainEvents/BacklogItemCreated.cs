@@ -10,10 +10,6 @@ namespace Tacta.EventStore.Test.Domain.DomainEvents
 
         public BacklogItemId BacklogItemId { get; }
 
-        public IEntityId AggregateId { get; }
-
-        public DateTime CreatedAt { get; set; }
-
         public BacklogItemCreated(string summary, BacklogItemId backlogItemId) : base(backlogItemId.ToString())
         {
             CreatedAt = DateTime.Now;

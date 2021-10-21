@@ -6,10 +6,6 @@ namespace Tacta.EventStore.Test.Domain.DomainEvents
 {
     public class SubTaskAdded : DomainEvent
     {
-        public IEntityId AggregateId { get; }
-
-        public DateTime CreatedAt { get; set; }
-
         public string Title { get; }
 
         public TaskId TaskId { get; }
