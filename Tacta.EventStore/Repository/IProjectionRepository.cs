@@ -2,11 +2,11 @@
 using System.Threading.Tasks;
 using Tacta.EventStore.Domain;
 
-namespace Tacta.EventStore.Projector
+namespace Tacta.EventStore.Repository
 {
     public interface IProjectionRepository
     {
-        Task<int> GetSequence();
+        Task<int> GetSequenceAsync();
         Task<IReadOnlyCollection<IDomainEvent>> GetFromSequenceAsync(int sequence, int take);
     }
 }

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Moq;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector;
+using Tacta.EventStore.Repository;
 using Tacta.EventStore.Test.Projector.DomainEvents;
 using Tacta.EventStore.Test.Projector.Projections;
 using Xunit;
@@ -26,11 +27,11 @@ namespace Tacta.EventStore.Test.Projector
             userRegistered.WithVersionAndSequence(1, 120);
 
             _projectionRepository.Setup(x => x.GetFromSequenceAsync(0, 100))
-                .ReturnsAsync(new List<DomainEvent> { userRegistered });
+                .ReturnsAsync(new List<DomainEvent> {userRegistered});
 
             // When
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> { userProjection });
+            var processor = new ProjectionProcessor(new List<IProjection> {userProjection});
             await processor.Process();
 
             // Then
@@ -48,11 +49,11 @@ namespace Tacta.EventStore.Test.Projector
             userRegistered.WithVersionAndSequence(2, 345);
 
             _projectionRepository.Setup(x => x.GetFromSequenceAsync(0, 100))
-                .ReturnsAsync(new List<DomainEvent> { userRegistered, userBanned });
+                .ReturnsAsync(new List<DomainEvent> {userRegistered, userBanned});
 
             // When
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> { userProjection });
+            var processor = new ProjectionProcessor(new List<IProjection> {userProjection});
             await processor.Process();
 
             // Then

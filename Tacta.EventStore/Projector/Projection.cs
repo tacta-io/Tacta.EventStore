@@ -1,22 +1,24 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Tacta.EventStore.Domain;
+using Tacta.EventStore.Repository;
 
 namespace Tacta.EventStore.Projector
 {
     public abstract class Projection : IProjection
     {
+        private readonly IProjectionRepository _projectionRepository;
         public int Sequence { get; private set; }
 
-        private readonly IProjectionRepository _projectionRepository;
+        protected Projection(IProjectionRepository projectionRepository)
+        {
+            _projectionRepository = projectionRepository;
+        }
 
-        protected Projection(IProjectionRepository projectionRepository) => _projectionRepository = projectionRepository;
-
-        public async Task On(IDomainEvent @event) => await UpdateSequence(@event.Sequence);
-
-        public async Task UpdateSequence(int sequence) => await Task.FromResult(Sequence = sequence);
-
-        public async Task InitializeSequence() => Sequence = await _projectionRepository.GetSequence().ConfigureAwait(false);
+        public async Task InitializeSequence()
+        {
+            Sequence = await _projectionRepository.GetSequenceAsync().ConfigureAwait(false);
+        }
 
         public async Task ApplyEvents(int take)
         {
@@ -25,6 +27,19 @@ namespace Tacta.EventStore.Projector
             foreach (var @event in events.OrderBy(x => x.Sequence)) await Apply(@event).ConfigureAwait(false);
         }
 
-        private async Task Apply(IDomainEvent @event) => await ((dynamic)this).On((dynamic)@event);
+        public async Task On(IDomainEvent @event)
+        {
+            await UpdateSequence(@event.Sequence);
+        }
+
+        public async Task UpdateSequence(int sequence)
+        {
+            await Task.FromResult(Sequence = sequence);
+        }
+
+        private async Task Apply(IDomainEvent @event)
+        {
+            await ((dynamic) this).On((dynamic) @event);
+        }
     }
 }
