@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Tacta.EventStore.Projector;
+using Tacta.EventStore.Repository;
 using Tacta.EventStore.Test.Projector.DomainEvents;
 
 namespace Tacta.EventStore.Test.Projector.Projections
