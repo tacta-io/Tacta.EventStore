@@ -12,13 +12,14 @@ namespace Tacta.EventStore.Domain
     public abstract class ValueObject
     {
         /// <summary>
-        /// This is needed as salt for index. If only index was used, there is a chance that i ^ i+some_low_number produces same value
-        /// Issue is shown in following fiddle: https://dotnetfiddle.net/E3tgYY
+        ///     This is needed as salt for index. If only index was used, there is a chance that i ^ i+some_low_number produces
+        ///     same value
+        ///     Issue is shown in following fiddle: https://dotnetfiddle.net/E3tgYY
         /// </summary>
         private const int HighPrime = 557927;
 
         /// <summary>
-        /// Override GetAtomicValues in order to implement structural equality for your value object.
+        ///     Override GetAtomicValues in order to implement structural equality for your value object.
         /// </summary>
         /// <returns>Enumerable of properties to participate in equality comparison</returns>
         protected abstract IEnumerable<object> GetAtomicValues();
@@ -26,44 +27,43 @@ namespace Tacta.EventStore.Domain
         public override int GetHashCode()
         {
             return GetAtomicValues()
-                .Select((x, i) => (x != null ? x.GetHashCode() : 0) + (HighPrime * i))
+                .Select((x, i) => (x != null ? x.GetHashCode() : 0) + HighPrime * i)
                 .Aggregate((x, y) => x ^ y);
-        }
-
-        public ValueObject GetCopy()
-        {
-            return this.MemberwiseClone() as ValueObject;
-        }
-
-        public bool Equals(ValueObject obj)
-        {
-            if (obj == null || obj.GetType() != GetType())
-            {
-                return false;
-            }
-
-            return GetHashCode() == obj.GetHashCode();
         }
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (obj == null || obj.GetType() != GetType()) return false;
 
-            return Equals((ValueObject)obj);
+            var other = (ValueObject)obj;
+
+            return GetAtomicValues().SequenceEqual(other.GetAtomicValues());
         }
 
-        public static bool operator ==(ValueObject lhs, ValueObject rhs)
+        public ValueObject GetCopy()
         {
-            if (ReferenceEquals(lhs, null))
-            {
-                return ReferenceEquals(rhs, null);
-            }
-
-            return lhs.Equals(rhs);
+            return MemberwiseClone() as ValueObject;
         }
 
-        public static bool operator !=(ValueObject lhs, ValueObject rhs) => !(lhs == rhs);
+        public static bool operator ==(ValueObject one, ValueObject two)
+        {
+            return EqualOperator(one, two);
+        }
+
+        public static bool operator !=(ValueObject one, ValueObject two)
+        {
+            return NotEqualOperator(one, two);
+        }
+
+        protected static bool EqualOperator(ValueObject left, ValueObject right)
+        {
+            if (ReferenceEquals(left, null) ^ ReferenceEquals(right, null)) return false;
+            return ReferenceEquals(left, null) || left.Equals(right);
+        }
+
+        protected static bool NotEqualOperator(ValueObject left, ValueObject right)
+        {
+            return !EqualOperator(left, right);
+        }
     }
 }
