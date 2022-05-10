@@ -7,21 +7,23 @@ namespace Tacta.EventStore.Test.Domain.ValueObjects
     {
         public string Name { get; private set; }
         public string DisplayName { get; private set; }
+        public decimal FirstAmount { get; }
+        public decimal SecondAmount { get; }
 
-        private int SomethingProtected { get; set; }
-
-        private int SomethingPrivate { get; set; }
-
-        public Assignee(string name, string displayName)
+        public Assignee(string name, string displayName, decimal firstAmount, decimal secondAmount)
         {
             Name = name;
             DisplayName = displayName;
+            FirstAmount = firstAmount;
+            SecondAmount = secondAmount;
         }
 
         protected override IEnumerable<object> GetAtomicValues()
         {
             yield return Name;
             yield return DisplayName;
+            yield return FirstAmount;
+            yield return SecondAmount;
         }
     }
 }
