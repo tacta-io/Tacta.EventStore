@@ -13,12 +13,12 @@ namespace Tacta.EventStore.Test.Projector.Projections
 
         public async Task On(UserRegistered @event)
         {
-            await UpdateSequence(@event.Sequence);
+            
         }
 
         public async Task On(UserBanned @event)
         {
-            await UpdateSequence(@event.Sequence);
+            
         }
     }
 }

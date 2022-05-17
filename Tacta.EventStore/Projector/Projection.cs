@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository;
@@ -7,39 +8,31 @@ namespace Tacta.EventStore.Projector
 {
     public abstract class Projection : IProjection
     {
+        private int _sequence;
+
         private readonly IProjectionRepository _projectionRepository;
-        public int Sequence { get; private set; }
 
         protected Projection(IProjectionRepository projectionRepository)
         {
             _projectionRepository = projectionRepository;
         }
 
-        public async Task InitializeSequence()
+        public async Task Apply(IReadOnlyCollection<IDomainEvent> events)
         {
-            Sequence = await _projectionRepository.GetSequenceAsync().ConfigureAwait(false);
+            foreach (var @event in events.OrderBy(x => x.Sequence))
+            {
+                if (@event.Sequence <= _sequence) continue;
+
+                await ((dynamic)this).On((dynamic)@event);
+
+                _sequence = @event.Sequence;
+            }
         }
 
-        public async Task ApplyEvents(int take)
-        {
-            var events = await _projectionRepository.GetFromSequenceAsync(Sequence, take).ConfigureAwait(false);
+        public async Task Initialize() => _sequence = await _projectionRepository.GetSequenceAsync().ConfigureAwait(false);
 
-            foreach (var @event in events.OrderBy(x => x.Sequence)) await Apply(@event).ConfigureAwait(false);
-        }
+        public async Task On(IDomainEvent @event) => await Task.FromResult(_sequence = @event.Sequence).ConfigureAwait(false);
 
-        public async Task On(IDomainEvent @event)
-        {
-            await UpdateSequence(@event.Sequence);
-        }
-
-        public async Task UpdateSequence(int sequence)
-        {
-            await Task.FromResult(Sequence = sequence);
-        }
-
-        private async Task Apply(IDomainEvent @event)
-        {
-            await ((dynamic) this).On((dynamic) @event);
-        }
+        public int GetSequence() => _sequence;
     }
 }

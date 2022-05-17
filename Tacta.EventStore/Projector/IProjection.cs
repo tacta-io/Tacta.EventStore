@@ -1,11 +1,15 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Tacta.EventStore.Domain;
 
 namespace Tacta.EventStore.Projector
 {
     public interface IProjection
     {
-        Task InitializeSequence();
+        Task Apply(IReadOnlyCollection<IDomainEvent> events);
 
-        Task ApplyEvents(int take);
+        Task Initialize();
+
+        int GetSequence();
     }
 }

@@ -5,53 +5,69 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Moq;
+using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector;
+using Tacta.EventStore.Repository;
+using Tacta.EventStore.Test.Repository;
+using Tacta.EventStore.Test.Repository.DomainEvents;
 using Xunit;
 
 namespace Tacta.EventStore.Test.Projector
 {
-    public class ProjectionProcessorTest
+    public class ProjectionProcessorTest : SqlBaseTest
     {
         private readonly Mock<IProjection> _projectionMock;
+        private readonly IEventStoreRepository _eventStoreRepository;
 
         public ProjectionProcessorTest()
         {
             _projectionMock = new Mock<IProjection>();
+            _eventStoreRepository = new EventStoreRepository(ConnectionFactory);
         }
 
         [Fact]
         public async Task OnException_ShouldCallInitializeSequenceMethodExactlyOnce()
         {
             // Given
-            _projectionMock
-                .Setup(x => x.InitializeSequence())
-                .Callback(() => throw new Exception());
-
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object });
+            _projectionMock.Setup(x => x.Initialize()).Callback(() => throw new Exception());
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
 
             // When
-            var _ = await Record.ExceptionAsync(async () => await processor.Process().ConfigureAwait(false));
+            var _ = await Record.ExceptionAsync(async () => await processor.Process(100).ConfigureAwait(false));
 
             // Then
-            _projectionMock.Verify(x => x.InitializeSequence(), Times.Once);
+            _projectionMock.Verify(x => x.Initialize(), Times.Once);
         }
 
         [Fact]
         public async Task OnTransientSqlException_ShouldCallInitializeSequenceMethodAtLeastTwice()
         {
             // Given
-            _projectionMock
-                .Setup(x => x.InitializeSequence())
-                .Callback(() => throw GenerateRandomTransientSqlException());
-
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object });
+            _projectionMock.Setup(x => x.Initialize()).Callback(() => throw GenerateRandomTransientSqlException());
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
 
             // When
             var _ = await Record.ExceptionAsync(async () => await processor.Process().ConfigureAwait(false));
 
             // Then
-            _projectionMock.Verify(x => x.InitializeSequence(), Times.AtLeast(2));
+            _projectionMock.Verify(x => x.Initialize(), Times.AtLeast(2));
+        }
+
+        [Fact]
+        public async Task ProjectionProcessor_ShouldReturnNumberOfProcessedEvents()
+        {
+            // Given
+            var (aggregate, events) = CreateFooAggregateWithRegisteredEvents();
+            await _eventStoreRepository.SaveAsync(aggregate, events);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+
+            // When
+            var count = await processor.Process();
+
+            // Then
+            count.Should().Be(3);
         }
 
         private static SqlException GenerateRandomTransientSqlException()
@@ -89,6 +105,24 @@ namespace Tacta.EventStore.Test.Projector
                 {$"Error message: {errorCode}", errorCollection, new DataException(), Guid.NewGuid()});
 
             return sqlException;
+        }
+
+        private static (AggregateRecord, List<EventRecord<DomainEvent>>) CreateFooAggregateWithRegisteredEvents()
+        {
+            const int eventCount = 3;
+
+            var fooAggregateRecord = new AggregateRecord($"foo_{Guid.NewGuid()}", "Foo", 0);
+
+            var events = new List<EventRecord<DomainEvent>>();
+
+            for (var i = 0; i < eventCount; i++)
+            {
+                var fooRegistered = new FooRegistered(fooAggregateRecord.Id, "test_0");
+
+                events.Add(new EventRecord<DomainEvent>(fooRegistered.Id, fooRegistered.CreatedAt, fooRegistered));
+            }
+
+            return (fooAggregateRecord, events);
         }
     }
 }
