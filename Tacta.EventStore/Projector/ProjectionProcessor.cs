@@ -32,11 +32,16 @@ namespace Tacta.EventStore.Projector
                 if (!_isInitialized) await Initialize().ConfigureAwait(false);
 
                 var events = await Load(take).ConfigureAwait(false);
-
-                foreach (var projection in _projections)
-                {
-                    await projection.Apply(events).ConfigureAwait(false);
-                }
+                var number1 = _projections.Count();
+                Parallel.ForEach(_projections, 
+                    new ParallelOptions()
+                    {
+                        MaxDegreeOfParallelism = number1
+                    },
+                    item =>
+                { 
+                    item.Apply(events).ConfigureAwait(false).GetAwaiter().GetResult();
+                });
 
                 processed = events.Count;
 
