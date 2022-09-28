@@ -23,7 +23,7 @@ namespace Tacta.EventStore.Projector
             _retryPolicy = new SqlServerResiliencePolicyBuilder().WithDefaults().BuildTransientErrorRetryPolicy();
         }
 
-        public async Task<int> Process(int take = 100)
+        public async Task<int> Process(int take = 100, bool processParallel = false)
         {
             var processed = 0;
 
@@ -33,11 +33,27 @@ namespace Tacta.EventStore.Projector
 
                 var events = await Load(take).ConfigureAwait(false);
 
-                foreach (var projection in _projections)
+                if (processParallel)
                 {
-                    await projection.Apply(events).ConfigureAwait(false);
+                    var maxDegreeOfParallelism = _projections.Count();
+                    Parallel.ForEach(_projections, 
+                        new ParallelOptions()
+                        {
+                            MaxDegreeOfParallelism = maxDegreeOfParallelism
+                        },
+                        item =>
+                        { 
+                            item.Apply(events).ConfigureAwait(false).GetAwaiter().GetResult();
+                        });
                 }
-
+                else
+                {
+                    foreach (var projection in _projections)
+                    {
+                        await projection.Apply(events).ConfigureAwait(false);
+                    }
+                }
+                
                 processed = events.Count;
 
                 if (processed > 0) _pivot = events.Max(x => x.Sequence);

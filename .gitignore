@@ -34,6 +34,8 @@ Latest commit 4ede575 10 minutes ago
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+.idea/
+
 # User-specific files
 *.rsuser
 *.suo
