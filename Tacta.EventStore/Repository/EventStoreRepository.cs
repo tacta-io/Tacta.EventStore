@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
+using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
 using Tacta.EventStore.Repository.Exceptions;
 
@@ -21,6 +21,13 @@ namespace Tacta.EventStore.Repository
         };
 
         public EventStoreRepository(ISqlConnectionFactory connectionFactory) => _sqlConnectionFactory = connectionFactory;
+
+        public EventStoreRepository(ISqlConnectionFactory connectionFactory,
+            JsonSerializerSettings jsonSerializerSettings)
+        {
+            _sqlConnectionFactory = connectionFactory;
+            _jsonSerializerSettings = jsonSerializerSettings;
+        }
 
         public async Task SaveAsync<T>(AggregateRecord aggregateRecord, IReadOnlyCollection<EventRecord<T>> eventRecords)
         {
