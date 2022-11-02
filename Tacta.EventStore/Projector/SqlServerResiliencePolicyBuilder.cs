@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.SqlClient;
 using Microsoft.Data.SqlClient;
 using Polly;
 using Polly.Retry;
