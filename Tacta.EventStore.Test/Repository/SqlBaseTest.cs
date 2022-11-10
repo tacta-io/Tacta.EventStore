@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Data.SqlClient;
 using Dapper;
+using Microsoft.Data.SqlClient;
 using Tacta.EventStore.Repository;
 using Tacta.EventStore.Test.Repository.ConnectionFactory;
 
