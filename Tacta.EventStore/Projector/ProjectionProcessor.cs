@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Polly.Retry;
@@ -33,27 +35,32 @@ namespace Tacta.EventStore.Projector
 
                 var events = await Load(take).ConfigureAwait(false);
 
-                if (processParallel)
+                try
                 {
-                    var maxDegreeOfParallelism = _projections.Count();
-                    Parallel.ForEach(_projections, 
-                        new ParallelOptions()
-                        {
-                            MaxDegreeOfParallelism = maxDegreeOfParallelism
-                        },
-                        item =>
-                        { 
-                            item.Apply(events).ConfigureAwait(false).GetAwaiter().GetResult();
-                        });
-                }
-                else
-                {
-                    foreach (var projection in _projections)
+                    if (processParallel)
                     {
-                        await projection.Apply(events).ConfigureAwait(false);
+                        var maxDegreeOfParallelism = _projections.Count();
+                        Parallel.ForEach(_projections,
+                            new ParallelOptions()
+                            {
+                                MaxDegreeOfParallelism = maxDegreeOfParallelism
+                            },
+                            item => { item.Apply(events).ConfigureAwait(false).GetAwaiter().GetResult(); });
+                    }
+                    else
+                    {
+                        foreach (var projection in _projections)
+                        {
+                            await projection.Apply(events).ConfigureAwait(false);
+                        }
                     }
                 }
-                
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Process exception {0}", ex);
+                    throw;
+                }
+
                 processed = events.Count;
 
                 if (processed > 0) _pivot = events.Max(x => x.Sequence);
