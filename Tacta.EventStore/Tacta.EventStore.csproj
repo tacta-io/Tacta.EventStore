@@ -15,7 +15,7 @@
     <Version>1.3.3</Version>
     <PackageVersion>1.3.3</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Added ability to process projections in parallel</PackageReleaseNotes>
+    <PackageReleaseNotes>Added Serializable isolation level for Get method in EventStore</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
