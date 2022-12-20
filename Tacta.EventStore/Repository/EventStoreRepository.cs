@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
@@ -128,19 +129,23 @@ namespace Tacta.EventStore.Repository
         {
             using (var connection = _sqlConnectionFactory.SqlConnection())
             {
-                var storedEvents = (await connection.QueryAsync<StoredEvent>(query, param).ConfigureAwait(false)).ToList().AsReadOnly();
-
-                if (!storedEvents.Any()) return new List<EventStoreRecord<T>>();
-
-                return storedEvents.Select(@event => new EventStoreRecord<T>
+                connection.Open();
+                using (var trans = connection.BeginTransaction(IsolationLevel.Serializable))
                 {
-                    Event = JsonConvert.DeserializeObject<T>(@event.Payload, _jsonSerializerSettings),
-                    AggregateId = @event.AggregateId,
-                    CreatedAt = @event.CreatedAt,
-                    Id = @event.Id,
-                    Version = @event.Version,
-                    Sequence = @event.Sequence
-                }).OrderBy(x => x.Sequence).ToList().AsReadOnly();
+                    var storedEvents = (await connection.QueryAsync<StoredEvent>(query, param, trans).ConfigureAwait(false)).ToList().AsReadOnly();
+                   
+                    if (!storedEvents.Any()) return new List<EventStoreRecord<T>>();
+                  
+                    return storedEvents.Select(@event => new EventStoreRecord<T>
+                    {
+                        Event = JsonConvert.DeserializeObject<T>(@event.Payload, _jsonSerializerSettings),
+                        AggregateId = @event.AggregateId,
+                        CreatedAt = @event.CreatedAt,
+                        Id = @event.Id,
+                        Version = @event.Version,
+                        Sequence = @event.Sequence
+                    }).OrderBy(x => x.Sequence).ToList().AsReadOnly();
+                }
             }
         }
     }
