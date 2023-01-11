@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.3.3</Version>
-    <PackageVersion>1.3.3</PackageVersion>
+    <Version>1.3.5</Version>
+    <PackageVersion>1.3.5</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Added Serializable isolation level for Get method in EventStore</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed transaction commit for Get method in EventStore</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
