@@ -133,9 +133,11 @@ namespace Tacta.EventStore.Repository
                 using (var trans = connection.BeginTransaction(IsolationLevel.Serializable))
                 {
                     var storedEvents = (await connection.QueryAsync<StoredEvent>(query, param, trans).ConfigureAwait(false)).ToList().AsReadOnly();
-                   
+
+                    trans.Commit();
+
                     if (!storedEvents.Any()) return new List<EventStoreRecord<T>>();
-                  
+
                     return storedEvents.Select(@event => new EventStoreRecord<T>
                     {
                         Event = JsonConvert.DeserializeObject<T>(@event.Payload, _jsonSerializerSettings),
