@@ -1,8 +1,13 @@
 ﻿using System;
 using Dapper;
-using Microsoft.Data.SqlClient;
 using Tacta.EventStore.Repository;
 using Tacta.EventStore.Test.Repository.ConnectionFactory;
+
+#if USE_SYSTEM_DATA_SQLCLIENT
+    using System.Data.SqlClient;
+#elif USE_MICROSOFT_DATA_SQLCLIENT
+    using Microsoft.Data.SqlClient;
+#endif
 
 namespace Tacta.EventStore.Test.Repository
 {

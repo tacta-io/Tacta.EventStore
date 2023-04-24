@@ -21,16 +21,26 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
+		SystemDataSqlClient|Any CPU = SystemDataSqlClient|Any CPU
+		MicrosoftDataSqlClient|Any CPU = MicrosoftDataSqlClient|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{322FA018-D85F-4951-8AD4-733BF5063427}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{322FA018-D85F-4951-8AD4-733BF5063427}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{322FA018-D85F-4951-8AD4-733BF5063427}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{322FA018-D85F-4951-8AD4-733BF5063427}.Release|Any CPU.Build.0 = Release|Any CPU
+		{322FA018-D85F-4951-8AD4-733BF5063427}.SystemDataSqlClient|Any CPU.ActiveCfg = SystemDataSqlClient|Any CPU
+		{322FA018-D85F-4951-8AD4-733BF5063427}.SystemDataSqlClient|Any CPU.Build.0 = SystemDataSqlClient|Any CPU
+		{322FA018-D85F-4951-8AD4-733BF5063427}.MicrosoftDataSqlClient|Any CPU.ActiveCfg = MicrosoftDataSqlClient|Any CPU
+		{322FA018-D85F-4951-8AD4-733BF5063427}.MicrosoftDataSqlClient|Any CPU.Build.0 = MicrosoftDataSqlClient|Any CPU
 		{93833D72-EC3A-4522-A984-F97C649DC078}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{93833D72-EC3A-4522-A984-F97C649DC078}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93833D72-EC3A-4522-A984-F97C649DC078}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93833D72-EC3A-4522-A984-F97C649DC078}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93833D72-EC3A-4522-A984-F97C649DC078}.SystemDataSqlClient|Any CPU.ActiveCfg = SystemDataSqlClient|Any CPU
+		{93833D72-EC3A-4522-A984-F97C649DC078}.SystemDataSqlClient|Any CPU.Build.0 = SystemDataSqlClient|Any CPU
+		{93833D72-EC3A-4522-A984-F97C649DC078}.MicrosoftDataSqlClient|Any CPU.ActiveCfg = MicrosoftDataSqlClient|Any CPU
+		{93833D72-EC3A-4522-A984-F97C649DC078}.MicrosoftDataSqlClient|Any CPU.Build.0 = MicrosoftDataSqlClient|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

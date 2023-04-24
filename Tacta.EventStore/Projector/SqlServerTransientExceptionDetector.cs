@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Data.SqlClient;
 
 namespace Tacta.EventStore.Projector
 {
@@ -9,12 +8,25 @@ namespace Tacta.EventStore.Projector
     {
         public static bool ShouldRetryOn(Exception ex)
         {
-            if (ex is SqlException sqlException)
+            var sqlErrorNumbers = new List<int>();
+            
+            switch (ex)
             {
-                return sqlException.Errors.Cast<SqlError>().Any(err => TransientSqlErrorCodes.Contains(err.Number));
+                case System.Data.SqlClient.SqlException systemSqlException:
+                    sqlErrorNumbers = systemSqlException.Errors
+                        .Cast<System.Data.SqlClient.SqlError>()
+                        .Select(e => e.Number)
+                        .ToList();
+                    break;
+                case Microsoft.Data.SqlClient.SqlException microsoftSqlException:
+                    sqlErrorNumbers = microsoftSqlException.Errors
+                        .Cast<Microsoft.Data.SqlClient.SqlError>()
+                        .Select(e => e.Number)
+                        .ToList();
+                    break;
             }
 
-            return ex is TimeoutException;
+            return sqlErrorNumbers.Any(n => TransientSqlErrorCodes.Contains(n)) || ex is TimeoutException;
         }
 
         public static readonly HashSet<int> TransientSqlErrorCodes = new HashSet<int>
