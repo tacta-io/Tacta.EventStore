@@ -1,9 +1,9 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System.Data;
 
 namespace Tacta.EventStore.Repository
 {
     public interface ISqlConnectionFactory
     {
-        SqlConnection SqlConnection();
+        IDbConnection SqlConnection();
     }
 }

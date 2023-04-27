@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
-using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
 using Tacta.EventStore.Repository.Exceptions;
 
@@ -62,7 +60,8 @@ namespace Tacta.EventStore.Repository
             }
             catch (Exception e)
             {
-                if (e is SqlException && e.Message.Contains("ConcurrencyCheckIndex"))
+                if ((e is System.Data.SqlClient.SqlException || e is Microsoft.Data.SqlClient.SqlException) &&
+                    e.Message.Contains("ConcurrencyCheckIndex"))
                     throw new ConcurrencyCheckException(e.Message);
 
                 throw;

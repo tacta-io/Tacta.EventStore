@@ -1,5 +1,4 @@
 ﻿using System;
-using Microsoft.Data.SqlClient;
 using Polly;
 using Polly.Retry;
 
@@ -35,7 +34,8 @@ namespace Tacta.EventStore.Projector
 
         public AsyncRetryPolicy BuildTransientErrorRetryPolicy() =>
             Policy
-                .Handle<SqlException>(SqlServerTransientExceptionDetector.ShouldRetryOn)
+                .Handle<System.Data.SqlClient.SqlException>(SqlServerTransientExceptionDetector.ShouldRetryOn)
+                .Or<Microsoft.Data.SqlClient.SqlException>(SqlServerTransientExceptionDetector.ShouldRetryOn)
                 .Or<TimeoutException>()
                 .WaitAndRetryAsync(RetryCount, RetrySleepDurationDelegate);
     }

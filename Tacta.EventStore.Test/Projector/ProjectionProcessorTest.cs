@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.Data.SqlClient;
 using Moq;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector;
@@ -13,6 +12,12 @@ using Tacta.EventStore.Repository;
 using Tacta.EventStore.Test.Repository;
 using Tacta.EventStore.Test.Repository.DomainEvents;
 using Xunit;
+
+#if USE_SYSTEM_DATA_SQLCLIENT
+    using System.Data.SqlClient;
+#elif USE_MICROSOFT_DATA_SQLCLIENT
+    using Microsoft.Data.SqlClient;
+#endif
 
 namespace Tacta.EventStore.Test.Projector
 {

@@ -1,5 +1,11 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System.Data;
 using Tacta.EventStore.Repository;
+
+#if USE_SYSTEM_DATA_SQLCLIENT
+    using System.Data.SqlClient;
+#elif USE_MICROSOFT_DATA_SQLCLIENT
+    using Microsoft.Data.SqlClient;
+#endif
 
 namespace Tacta.EventStore.Test.Repository.ConnectionFactory
 {
@@ -11,6 +17,6 @@ namespace Tacta.EventStore.Test.Repository.ConnectionFactory
 
         public virtual string ConnectionString() => _connectionString;
 
-        public SqlConnection SqlConnection() => new SqlConnection(ConnectionString());
+        public IDbConnection SqlConnection() => new SqlConnection(ConnectionString());
     }
 }
