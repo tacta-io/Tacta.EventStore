@@ -12,7 +12,8 @@ namespace Tacta.EventStore.Repository
     public sealed class EventStoreRepository : IEventStoreRepository
     {
         private readonly ISqlConnectionFactory _sqlConnectionFactory;
-        private readonly IDbTransaction _sqlTransaction;
+        private readonly IDbConnection _connection = null;
+        private readonly IDbTransaction _transaction = null;
 
         private readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
         {
@@ -21,10 +22,15 @@ namespace Tacta.EventStore.Repository
             MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead
         };
 
-        public EventStoreRepository(ISqlConnectionFactory connectionFactory, IDbTransaction transaction = null)
+        public EventStoreRepository(ISqlConnectionFactory connectionFactory)
         {
             _sqlConnectionFactory = connectionFactory;
-            _sqlTransaction = transaction;
+        }
+        
+        public EventStoreRepository(IDbConnection connection, IDbTransaction transaction)
+        {
+            _connection = connection;
+            _transaction = transaction;
         }
 
         public EventStoreRepository(ISqlConnectionFactory connectionFactory,
@@ -60,9 +66,16 @@ namespace Tacta.EventStore.Repository
 
             try
             {
-                using (var connection = _sqlConnectionFactory.SqlConnection())
+                if (!UseExistingTransactions())
                 {
-                    await connection.ExecuteAsync(StoredEvent.InsertQuery, records, _sqlTransaction).ConfigureAwait(false);
+                    using (var connection = _sqlConnectionFactory.SqlConnection())
+                    {
+                        await connection.ExecuteAsync(StoredEvent.InsertQuery, records).ConfigureAwait(false);
+                    }
+                }
+                else
+                {
+                    await _connection.ExecuteAsync(StoredEvent.InsertQuery, records,_transaction).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -73,6 +86,11 @@ namespace Tacta.EventStore.Repository
 
                 throw;
             }
+        }
+
+        private bool UseExistingTransactions()
+        {
+            return _transaction != null && _connection != null;
         }
 
         public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string aggregateId)
@@ -128,18 +146,20 @@ namespace Tacta.EventStore.Repository
 
         public async Task<int> GetLatestSequence()
         {
-            using (var connection = _sqlConnectionFactory.SqlConnection())
+            using (var connection = UseExistingTransactions() ? _connection : _sqlConnectionFactory.SqlConnection())
             {
-                return await connection.QueryFirstOrDefaultAsync<int>(StoredEvent.SelectLatestSequenceQuery, _sqlTransaction)
+                return await connection
+                    .QueryFirstOrDefaultAsync<int>(StoredEvent.SelectLatestSequenceQuery, _transaction)
                     .ConfigureAwait(false);
             }
         }
 
         public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string query, object param)
         {
-            using (var connection = _sqlConnectionFactory.SqlConnection())
+            using (var connection = UseExistingTransactions() ? _connection : _sqlConnectionFactory.SqlConnection())
             {
-                var storedEvents = (await connection.QueryAsync<StoredEvent>(query, param, _sqlTransaction).ConfigureAwait(false))
+                var storedEvents =
+                    (await connection.QueryAsync<StoredEvent>(query, param, _transaction).ConfigureAwait(false))
                     .ToList().AsReadOnly();
 
                 if (!storedEvents.Any()) return new List<EventStoreRecord<T>>();

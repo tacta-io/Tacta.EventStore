@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Tacta.EventStore.Domain;
@@ -42,6 +43,36 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Equal(1, results.Count);
             Assert.Equal(booCreated.GetType(), results.Single(x => x.AggregateId == booId).Event.GetType());
             Assert.Equal(booCreated.CreatedAt.ToShortTimeString(), results.Single(x => x.AggregateId == booId).CreatedAt.ToShortTimeString());
+            Assert.Equal(booCreated.Id, results.Single(x => x.AggregateId == booId).Id);
+        }
+
+        [Fact]
+        public async Task PassTransaction_InsertAsync_GetAsync_SingleAggregate()
+        {
+            using var connection = ConnectionFactory.SqlConnection();
+            connection.Open();
+            var transaction = connection.BeginTransaction();
+            var eventStoreWithTransaction = new EventStoreRepository(connection, transaction);
+            // Given
+            const string booId = "001";
+            var booCreated = new BooCreated(booId, 100M, false);
+
+            // When
+            var aggregateRecord = new AggregateRecord(booId, "Boo", 0);
+            var eventRecords = new List<EventRecord<DomainEvent>>
+            {
+                new EventRecord<DomainEvent>(booCreated.Id, booCreated.CreatedAt, booCreated)
+            };
+
+            await eventStoreWithTransaction.SaveAsync(aggregateRecord, eventRecords).ConfigureAwait(false);
+
+            // Then
+            var results = await eventStoreWithTransaction.GetAsync<DomainEvent>(booId).ConfigureAwait(false);
+
+            Assert.Equal(1, results.Count);
+            Assert.Equal(booCreated.GetType(), results.Single(x => x.AggregateId == booId).Event.GetType());
+            Assert.Equal(booCreated.CreatedAt.ToShortTimeString(),
+                results.Single(x => x.AggregateId == booId).CreatedAt.ToShortTimeString());
             Assert.Equal(booCreated.Id, results.Single(x => x.AggregateId == booId).Id);
         }
 
@@ -310,6 +341,35 @@ namespace Tacta.EventStore.Test.Repository
             // Then
             Assert.Equal(4, latestSequence);
         }
+        
+        [Fact]
+        public async Task PassTransaction_GetLatestSequence()
+        {
+            // Given
+            var booId = "001";
+            var booCreated = new BooCreated(booId, 100M, false);
+            var booActivated = new BooActivated(booId);
+
+            var aggregateRecordBoo = new AggregateRecord(booId, "Boo", 0);
+            var eventRecordsBoo = new List<EventRecord<DomainEvent>>
+            {
+                new EventRecord<DomainEvent>(booCreated.Id, booCreated.CreatedAt, booCreated),
+                new EventRecord<DomainEvent>(booActivated.Id, booActivated.CreatedAt, booActivated)
+            };
+
+            using var connection = ConnectionFactory.SqlConnection();
+            connection.Open();
+            var transaction = connection.BeginTransaction();
+            var eventStoreWithTransaction = new EventStoreRepository(connection, transaction);
+            
+            await eventStoreWithTransaction.SaveAsync(aggregateRecordBoo, eventRecordsBoo).ConfigureAwait(false);
+
+            // When
+            var latestSequence = await eventStoreWithTransaction.GetLatestSequence().ConfigureAwait(false);
+
+            // Then
+            Assert.Equal(4, latestSequence);
+        }
 
 
         private async Task StoreFooRegistered(string fooId)
@@ -341,5 +401,7 @@ namespace Tacta.EventStore.Test.Repository
 
             return (booCreated.Id, booActivated.Id);
         }
+        
+       
     }
 }
