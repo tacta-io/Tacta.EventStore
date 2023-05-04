@@ -368,7 +368,7 @@ namespace Tacta.EventStore.Test.Repository
             var latestSequence = await eventStoreWithTransaction.GetLatestSequence().ConfigureAwait(false);
 
             // Then
-            Assert.Equal(4, latestSequence);
+            Assert.Equal(2, latestSequence);
         }
 
 

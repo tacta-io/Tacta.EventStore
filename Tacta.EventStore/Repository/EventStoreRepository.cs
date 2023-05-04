@@ -149,7 +149,7 @@ namespace Tacta.EventStore.Repository
             using (var connection = UseExistingTransactions() ? _connection : _sqlConnectionFactory.SqlConnection())
             {
                 return await connection
-                    .QueryFirstOrDefaultAsync<int>(StoredEvent.SelectLatestSequenceQuery, _transaction)
+                    .QueryFirstOrDefaultAsync<int>(StoredEvent.SelectLatestSequenceQuery, transaction: _transaction)
                     .ConfigureAwait(false);
             }
         }
