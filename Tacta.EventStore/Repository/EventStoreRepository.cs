@@ -26,12 +26,6 @@ namespace Tacta.EventStore.Repository
         {
             _sqlConnectionFactory = connectionFactory;
         }
-        
-        public EventStoreRepository(IDbConnection connection, IDbTransaction transaction)
-        {
-            _connection = connection;
-            _transaction = transaction;
-        }
 
         public EventStoreRepository(ISqlConnectionFactory connectionFactory,
             JsonSerializerSettings jsonSerializerSettings)
@@ -41,7 +35,7 @@ namespace Tacta.EventStore.Repository
         }
 
         public async Task SaveAsync<T>(AggregateRecord aggregateRecord,
-            IReadOnlyCollection<EventRecord<T>> eventRecords)
+            IReadOnlyCollection<EventRecord<T>> eventRecords, IDbConnection con=null, IDbTransaction transaction=null)
         {
             if (eventRecords == null || !eventRecords.Any()) return;
 
@@ -66,7 +60,7 @@ namespace Tacta.EventStore.Repository
 
             try
             {
-                if (!UseExistingTransactions())
+                if (con==null && transaction == null)
                 {
                     using (var connection = _sqlConnectionFactory.SqlConnection())
                     {
@@ -75,7 +69,7 @@ namespace Tacta.EventStore.Repository
                 }
                 else
                 {
-                    await _connection.ExecuteAsync(StoredEvent.InsertQuery, records,_transaction).ConfigureAwait(false);
+                    await con.ExecuteAsync(StoredEvent.InsertQuery, records,transaction).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -86,11 +80,6 @@ namespace Tacta.EventStore.Repository
 
                 throw;
             }
-        }
-
-        private bool UseExistingTransactions()
-        {
-            return _transaction != null && _connection != null;
         }
 
         public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string aggregateId)
@@ -146,7 +135,7 @@ namespace Tacta.EventStore.Repository
 
         public async Task<int> GetLatestSequence()
         {
-            using (var connection = UseExistingTransactions() ? _connection : _sqlConnectionFactory.SqlConnection())
+            using (var connection = _sqlConnectionFactory.SqlConnection())
             {
                 return await connection
                     .QueryFirstOrDefaultAsync<int>(StoredEvent.SelectLatestSequenceQuery, transaction: _transaction)
@@ -156,7 +145,7 @@ namespace Tacta.EventStore.Repository
 
         public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string query, object param)
         {
-            using (var connection = UseExistingTransactions() ? _connection : _sqlConnectionFactory.SqlConnection())
+            using (var connection =_sqlConnectionFactory.SqlConnection())
             {
                 var storedEvents =
                     (await connection.QueryAsync<StoredEvent>(query, param, _transaction).ConfigureAwait(false))

@@ -52,7 +52,6 @@ namespace Tacta.EventStore.Test.Repository
             using var connection = ConnectionFactory.SqlConnection();
             connection.Open();
             var transaction = connection.BeginTransaction();
-            var eventStoreWithTransaction = new EventStoreRepository(connection, transaction);
             // Given
             const string booId = "001";
             var booCreated = new BooCreated(booId, 100M, false);
@@ -64,10 +63,10 @@ namespace Tacta.EventStore.Test.Repository
                 new EventRecord<DomainEvent>(booCreated.Id, booCreated.CreatedAt, booCreated)
             };
 
-            await eventStoreWithTransaction.SaveAsync(aggregateRecord, eventRecords).ConfigureAwait(false);
-
+            await _eventStoreRepository.SaveAsync(aggregateRecord, eventRecords, connection, transaction).ConfigureAwait(false);
+            transaction.Commit();
             // Then
-            var results = await eventStoreWithTransaction.GetAsync<DomainEvent>(booId).ConfigureAwait(false);
+            var results = await _eventStoreRepository.GetAsync<DomainEvent>(booId).ConfigureAwait(false);
 
             Assert.Equal(1, results.Count);
             Assert.Equal(booCreated.GetType(), results.Single(x => x.AggregateId == booId).Event.GetType());
@@ -342,36 +341,6 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Equal(4, latestSequence);
         }
         
-        [Fact]
-        public async Task PassTransaction_GetLatestSequence()
-        {
-            // Given
-            var booId = "001";
-            var booCreated = new BooCreated(booId, 100M, false);
-            var booActivated = new BooActivated(booId);
-
-            var aggregateRecordBoo = new AggregateRecord(booId, "Boo", 0);
-            var eventRecordsBoo = new List<EventRecord<DomainEvent>>
-            {
-                new EventRecord<DomainEvent>(booCreated.Id, booCreated.CreatedAt, booCreated),
-                new EventRecord<DomainEvent>(booActivated.Id, booActivated.CreatedAt, booActivated)
-            };
-
-            using var connection = ConnectionFactory.SqlConnection();
-            connection.Open();
-            var transaction = connection.BeginTransaction();
-            var eventStoreWithTransaction = new EventStoreRepository(connection, transaction);
-            
-            await eventStoreWithTransaction.SaveAsync(aggregateRecordBoo, eventRecordsBoo).ConfigureAwait(false);
-
-            // When
-            var latestSequence = await eventStoreWithTransaction.GetLatestSequence().ConfigureAwait(false);
-
-            // Then
-            Assert.Equal(2, latestSequence);
-        }
-
-
         private async Task StoreFooRegistered(string fooId)
         {
             var fooRegistered1 = new FooRegistered(fooId, "testing foo");
