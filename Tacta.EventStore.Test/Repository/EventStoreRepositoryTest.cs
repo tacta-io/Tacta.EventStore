@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Tacta.EventStore.Domain;
@@ -42,6 +43,35 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Equal(1, results.Count);
             Assert.Equal(booCreated.GetType(), results.Single(x => x.AggregateId == booId).Event.GetType());
             Assert.Equal(booCreated.CreatedAt.ToShortTimeString(), results.Single(x => x.AggregateId == booId).CreatedAt.ToShortTimeString());
+            Assert.Equal(booCreated.Id, results.Single(x => x.AggregateId == booId).Id);
+        }
+
+        [Fact]
+        public async Task PassTransaction_InsertAsync_GetAsync_SingleAggregate()
+        {
+            using var connection = ConnectionFactory.SqlConnection();
+            connection.Open();
+            var transaction = connection.BeginTransaction();
+            // Given
+            const string booId = "001";
+            var booCreated = new BooCreated(booId, 100M, false);
+
+            // When
+            var aggregateRecord = new AggregateRecord(booId, "Boo", 0);
+            var eventRecords = new List<EventRecord<DomainEvent>>
+            {
+                new EventRecord<DomainEvent>(booCreated.Id, booCreated.CreatedAt, booCreated)
+            };
+
+            await _eventStoreRepository.SaveAsync(aggregateRecord, eventRecords, connection, transaction).ConfigureAwait(false);
+            transaction.Commit();
+            // Then
+            var results = await _eventStoreRepository.GetAsync<DomainEvent>(booId).ConfigureAwait(false);
+
+            Assert.Equal(1, results.Count);
+            Assert.Equal(booCreated.GetType(), results.Single(x => x.AggregateId == booId).Event.GetType());
+            Assert.Equal(booCreated.CreatedAt.ToShortTimeString(),
+                results.Single(x => x.AggregateId == booId).CreatedAt.ToShortTimeString());
             Assert.Equal(booCreated.Id, results.Single(x => x.AggregateId == booId).Id);
         }
 
@@ -310,8 +340,7 @@ namespace Tacta.EventStore.Test.Repository
             // Then
             Assert.Equal(4, latestSequence);
         }
-
-
+        
         private async Task StoreFooRegistered(string fooId)
         {
             var fooRegistered1 = new FooRegistered(fooId, "testing foo");
@@ -341,5 +370,7 @@ namespace Tacta.EventStore.Test.Repository
 
             return (booCreated.Id, booActivated.Id);
         }
+        
+       
     }
 }

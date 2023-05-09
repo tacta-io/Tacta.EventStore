@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
@@ -19,7 +20,10 @@ namespace Tacta.EventStore.Repository
             MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead
         };
 
-        public EventStoreRepository(ISqlConnectionFactory connectionFactory) => _sqlConnectionFactory = connectionFactory;
+        public EventStoreRepository(ISqlConnectionFactory connectionFactory)
+        {
+            _sqlConnectionFactory = connectionFactory;
+        }
 
         public EventStoreRepository(ISqlConnectionFactory connectionFactory,
             JsonSerializerSettings jsonSerializerSettings)
@@ -28,7 +32,8 @@ namespace Tacta.EventStore.Repository
             _jsonSerializerSettings = jsonSerializerSettings;
         }
 
-        public async Task SaveAsync<T>(AggregateRecord aggregateRecord, IReadOnlyCollection<EventRecord<T>> eventRecords)
+        public async Task SaveAsync<T>(AggregateRecord aggregateRecord,
+            IReadOnlyCollection<EventRecord<T>> eventRecords, IDbConnection con=null, IDbTransaction transaction=null)
         {
             if (eventRecords == null || !eventRecords.Any()) return;
 
@@ -53,9 +58,16 @@ namespace Tacta.EventStore.Repository
 
             try
             {
-                using (var connection = _sqlConnectionFactory.SqlConnection())
+                if (con==null && transaction == null)
                 {
-                    await connection.ExecuteAsync(StoredEvent.InsertQuery, records).ConfigureAwait(false);
+                    using (var connection = _sqlConnectionFactory.SqlConnection())
+                    {
+                        await connection.ExecuteAsync(StoredEvent.InsertQuery, records).ConfigureAwait(false);
+                    }
+                }
+                else
+                {
+                    await con.ExecuteAsync(StoredEvent.InsertQuery, records,transaction).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -78,12 +90,15 @@ namespace Tacta.EventStore.Repository
             return await GetAsync<T>(StoredEvent.SelectQuery, param).ConfigureAwait(false);
         }
 
-        public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetFromSequenceAsync<T>(int sequence, int? take = null)
+        public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetFromSequenceAsync<T>(int sequence,
+            int? take = null)
         {
             if (sequence < 0)
                 throw new InvalidSequenceException("Sequence cannot be less the zero");
 
-            var query = take.HasValue ? StoredEvent.SelectChunkedWithLimitQuery : StoredEvent.SelectChunkedWithoutLimitQuery;
+            var query = take.HasValue
+                ? StoredEvent.SelectChunkedWithLimitQuery
+                : StoredEvent.SelectChunkedWithoutLimitQuery;
 
             var param = new { Sequence = sequence, Take = take };
 
@@ -120,16 +135,20 @@ namespace Tacta.EventStore.Repository
         {
             using (var connection = _sqlConnectionFactory.SqlConnection())
             {
-                return await connection.QueryFirstOrDefaultAsync<int>(StoredEvent.SelectLatestSequenceQuery).ConfigureAwait(false);
+                return await connection
+                    .QueryFirstOrDefaultAsync<int>(StoredEvent.SelectLatestSequenceQuery)
+                    .ConfigureAwait(false);
             }
         }
 
         public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string query, object param)
         {
-            using (var connection = _sqlConnectionFactory.SqlConnection())
+            using (var connection =_sqlConnectionFactory.SqlConnection())
             {
-                var storedEvents = (await connection.QueryAsync<StoredEvent>(query, param).ConfigureAwait(false)).ToList().AsReadOnly();
-                
+                var storedEvents =
+                    (await connection.QueryAsync<StoredEvent>(query, param).ConfigureAwait(false))
+                    .ToList().AsReadOnly();
+
                 if (!storedEvents.Any()) return new List<EventStoreRecord<T>>();
 
                 return storedEvents.Select(@event => new EventStoreRecord<T>
