@@ -12,8 +12,6 @@ namespace Tacta.EventStore.Repository
     public sealed class EventStoreRepository : IEventStoreRepository
     {
         private readonly ISqlConnectionFactory _sqlConnectionFactory;
-        private readonly IDbConnection _connection = null;
-        private readonly IDbTransaction _transaction = null;
 
         private readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
         {
@@ -138,7 +136,7 @@ namespace Tacta.EventStore.Repository
             using (var connection = _sqlConnectionFactory.SqlConnection())
             {
                 return await connection
-                    .QueryFirstOrDefaultAsync<int>(StoredEvent.SelectLatestSequenceQuery, transaction: _transaction)
+                    .QueryFirstOrDefaultAsync<int>(StoredEvent.SelectLatestSequenceQuery)
                     .ConfigureAwait(false);
             }
         }
@@ -148,7 +146,7 @@ namespace Tacta.EventStore.Repository
             using (var connection =_sqlConnectionFactory.SqlConnection())
             {
                 var storedEvents =
-                    (await connection.QueryAsync<StoredEvent>(query, param, _transaction).ConfigureAwait(false))
+                    (await connection.QueryAsync<StoredEvent>(query, param).ConfigureAwait(false))
                     .ToList().AsReadOnly();
 
                 if (!storedEvents.Any()) return new List<EventStoreRecord<T>>();
