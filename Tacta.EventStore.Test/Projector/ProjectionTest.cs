@@ -53,7 +53,7 @@ namespace Tacta.EventStore.Test.Projector
         }
         
         [Fact]
-        public async Task NoProjectionsAdded_ThrowsException()
+        public async Task NoProjectionsAdded_ReturnsZero()
         {
             // Given
             var userRegistered = new UserRegistered("userId", "John Doe", false);
