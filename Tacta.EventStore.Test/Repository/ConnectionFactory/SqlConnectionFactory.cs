@@ -18,5 +18,7 @@ namespace Tacta.EventStore.Test.Repository.ConnectionFactory
         public virtual string ConnectionString() => _connectionString;
 
         public IDbConnection SqlConnection() => new SqlConnection(ConnectionString());
+        
+        public IDbTransaction Transaction { get; }
     }
 }

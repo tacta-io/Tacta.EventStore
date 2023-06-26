@@ -76,7 +76,7 @@ namespace Tacta.EventStore.Projector
                 await projection.Initialize().ConfigureAwait(false);
             }
 
-            _pivot = _projections.Min(x => x.GetSequence());
+            _pivot = _projections.Any() ? _projections.Min(x => x.GetSequence()) : 0;
 
             _isInitialized = true;
         }

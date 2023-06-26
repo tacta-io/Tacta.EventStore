@@ -51,6 +51,37 @@ namespace Tacta.EventStore.Test.Projector
             // Then
             Assert.Equal(120, userProjection.GetSequence());
         }
+        
+        [Fact]
+        public async Task NoProjectionsAdded_ThrowsException()
+        {
+            // Given
+            var userRegistered = new UserRegistered("userId", "John Doe", false);
+            userRegistered.WithVersionAndSequence(1, 120);
+
+            _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100))
+                .ReturnsAsync(new List<EventStoreRecord<DomainEvent>>
+                {
+                    new EventStoreRecord<DomainEvent>
+                    {
+                        AggregateId = userRegistered.AggregateId,
+                        CreatedAt = userRegistered.CreatedAt,
+                        Event = userRegistered,
+                        Id = Guid.NewGuid(),
+                        Sequence = userRegistered.Sequence,
+                        Version = userRegistered.Version
+                    }
+                });
+
+            // When
+            var userProjection = new UserProjection(_projectionRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection>(), _eventStoreRepository.Object);
+            await processor.Process();
+
+            // Then
+            Assert.Equal(0, userProjection.GetSequence());
+        }
+
 
         [Fact]
         public async Task OnUserBanned()

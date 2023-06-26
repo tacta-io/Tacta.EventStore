@@ -31,7 +31,7 @@ namespace Tacta.EventStore.Test.Projector
             _projectionMock = new Mock<IProjection>();
             _eventStoreRepository = new EventStoreRepository(ConnectionFactory);
         }
-
+        
         [Fact]
         public async Task OnException_ShouldCallInitializeSequenceMethodExactlyOnce()
         {
