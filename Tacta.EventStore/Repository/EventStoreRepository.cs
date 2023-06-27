@@ -58,7 +58,7 @@ namespace Tacta.EventStore.Repository
 
             try
             {
-                if (con==null && transaction == null)
+                if (_sqlConnectionFactory.Transaction == null)
                 {
                     using (var connection = _sqlConnectionFactory.SqlConnection())
                     {
@@ -67,7 +67,7 @@ namespace Tacta.EventStore.Repository
                 }
                 else
                 {
-                    await con.ExecuteAsync(StoredEvent.InsertQuery, records,transaction).ConfigureAwait(false);
+                    await _sqlConnectionFactory.Transaction.Connection.ExecuteAsync(StoredEvent.InsertQuery, records,_sqlConnectionFactory.Transaction).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
