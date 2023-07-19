@@ -137,9 +137,9 @@ When creating a read model, do not forget ``` Sequence ``` property as it is man
 
 After defining a read model, create a table where the model can be saved. Also, create ``` TicketReadModelRepository ``` to be able to do crud operations on the model. Read model repositories need to be inherited from ``` Tacta.EventStore.Repository.ProjectionRepository ```.
 
-### How to create a projection for TicketReadModel?
+### How to create a projection for a read model?
 
-First, ``` TicketReadModelProjection ``` needs to be created and inherited from ``` Tacta.EventStore.Projector.Projection ```. Then, for every domain event that needs to be projected to the read model, create ``` On ``` method and define how the domain event will affect the read model.
+Let's try to create a projection for ``` TicketReadModel ```. First, ``` TicketReadModelProjection ``` needs to be created and inherited from ``` Tacta.EventStore.Projector.Projection ```. Then, for every domain event that needs to be projected to the read model, create ``` On ``` method and define how the domain event will affect the read model.
 
 ```c#
    public async Task On(TicketEstimated @event)
@@ -151,7 +151,8 @@ First, ``` TicketReadModelProjection ``` needs to be created and inherited from 
            Estimation = @event.NumberOfDays
        };
 
-       // in the repo define how to update the read model in the database with information from the domain event we react to
+       // in the read model repository define how to update the read model in the database
+       // with information from the domain event we react to
        await _ticketReadModelRepository.OnTicketEstimatedAsync(ticket).ConfigureAwait(false);
    }
 ```
