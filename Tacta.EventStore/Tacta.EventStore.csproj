@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.3.7</Version>
-    <PackageVersion>1.3.8</PackageVersion>
+    <Version>1.4.0</Version>
+    <PackageVersion>1.4.0</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Transaction is now wrapped into SqlConnection interface, no need to pass it explicitly</PackageReleaseNotes>
+    <PackageReleaseNotes>Method for fetching statuses of projections</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
