@@ -12,8 +12,8 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.5.0</Version>
-    <PackageVersion>1.5.0</PackageVersion>
+    <Version>1.5.1</Version>
+    <PackageVersion>1.5.1</PackageVersion>
     <Title>Tacta EventStore Library</Title>
     <PackageReleaseNotes>Projections Status Monitoring Page</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
