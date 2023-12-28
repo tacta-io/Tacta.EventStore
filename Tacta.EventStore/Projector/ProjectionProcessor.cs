@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Polly.Retry;
 using Tacta.EventStore.Domain;
@@ -25,7 +26,27 @@ namespace Tacta.EventStore.Projector
             _retryPolicy = new SqlServerResiliencePolicyBuilder().WithDefaults().BuildTransientErrorRetryPolicy();
         }
 
-        public IDictionary<string, int> Status() => _projections.ToDictionary(x => x.GetType().Name, x => x.GetSequence());
+        public async Task<string> Status(string service, int refreshRate = 5)
+        {
+            var sequence = await _eventStoreRepository.GetLatestSequence().ConfigureAwait(false);
+            var statuses = _projections.ToDictionary(x => x.GetType().Name, x => x.GetSequence());
+
+            var data = new StringBuilder();
+
+            foreach (var status in statuses)
+            {
+                data.Append($"{{projection:'{status.Key}', sequence:'{status.Value}'}},");
+            }
+
+            var content = new StringBuilder(StatusContent.Html)
+                .Replace("{refresh}", refreshRate.ToString())
+                .Replace("{sequence}", sequence.ToString())
+                .Replace("{data}", data.ToString())
+                .Replace("{service}", service)
+                .ToString();
+
+            return content;
+        }
 
         public async Task<int> Process(int take = 100, bool processParallel = false)
         {

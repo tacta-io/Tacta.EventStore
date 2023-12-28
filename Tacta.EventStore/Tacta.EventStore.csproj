@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.4.0</Version>
-    <PackageVersion>1.4.0</PackageVersion>
+    <Version>1.5.0</Version>
+    <PackageVersion>1.5.0</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Method for fetching statuses of projections</PackageReleaseNotes>
+    <PackageReleaseNotes>Projections Status Monitoring Page</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
