@@ -162,5 +162,11 @@ namespace Tacta.EventStore.Repository
                 }).OrderBy(x => x.Sequence).ToList().AsReadOnly();
             }
         }
+
+        public async Task<IReadOnlyCollection<EventStoreRecord<T>>> LoadAsync<T>(int offset, int rows, IEnumerable<string> eventsInterestedIn)
+        {
+            var param = new { eventT = eventsInterestedIn };
+            return await GetAsync<T>(StoredEvent.SelectTopOffset(rows, offset), param).ConfigureAwait(false);
+        }
     }
 }

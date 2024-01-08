@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace Tacta.EventStore.Repository
 {
@@ -48,5 +49,14 @@ namespace Tacta.EventStore.Repository
 
         public static string SelectLatestSequenceQuery =
             @"SELECT MAX ([Sequence]) FROM [dbo].[EventStore]";
+
+        public static string SelectTopOffset(int rows, int offset)
+        {
+            var query = new StringBuilder($@"SELECT TOP({rows}) [Id], [AggregateId], [Version], [CreatedAt], [Payload], [Sequence] 
+                FROM [dbo].[EventStore] 
+                WHERE Sequence>{offset} and Name in @eventT order by Sequence ASC");
+
+            return query.ToString();
+        }
     }
 }

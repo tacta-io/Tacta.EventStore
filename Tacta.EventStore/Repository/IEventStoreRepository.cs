@@ -16,5 +16,6 @@ namespace Tacta.EventStore.Repository
         Task<IReadOnlyCollection<EventStoreRecord<T>>> GetUntilAsync<T>(string aggregateId, int sequence);
         Task<int> GetLatestSequence();
         Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string query, object param);
+        Task<IReadOnlyCollection<EventStoreRecord<T>>> LoadAsync<T>(int offset, int rows, IEnumerable<string> eventsInterestedIn);
     }
 }
