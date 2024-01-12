@@ -1,15 +1,19 @@
 ﻿using System.Data;
-using Tacta.EventStore.Repository;
+using Tacta.Connection;
+using System.Data.Common;
+using System.Threading.Tasks;
+using System;
+using System.Threading;
 
 #if USE_SYSTEM_DATA_SQLCLIENT
     using System.Data.SqlClient;
 #elif USE_MICROSOFT_DATA_SQLCLIENT
-    using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 #endif
 
 namespace Tacta.EventStore.Test.Repository.ConnectionFactory
 {
-    public class SqlConnectionFactory : ISqlConnectionFactory
+    public class SqlConnectionFactory : IConnectionFactory
     {
         private readonly string _connectionString;
 
@@ -17,8 +21,16 @@ namespace Tacta.EventStore.Test.Repository.ConnectionFactory
 
         public virtual string ConnectionString() => _connectionString;
 
-        public IDbConnection SqlConnection() => new SqlConnection(ConnectionString());
-        
-        public IDbTransaction Transaction { get; }
+        public DbConnection Connection() => new SqlConnection(ConnectionString());
+
+        public async Task ExecuteWithTransactionIfExists(Func<DbConnection, IDbTransaction, Task> func, CancellationToken ct = default)
+        {
+            await func.Invoke(Connection(), null);
+        }
+
+        public async Task<T> ExecuteWithTransactionIfExists<T>(Func<DbConnection, IDbTransaction, Task<T>> func, CancellationToken ct = default)
+        {
+            return  await func.Invoke(Connection(), null);
+        }
     }
 }

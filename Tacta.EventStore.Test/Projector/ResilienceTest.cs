@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
@@ -62,7 +63,7 @@ namespace Tacta.EventStore.Test.Projector
             var userBanned = new UserBanned("User_123");
             userBanned.WithVersionAndSequence(3, 843);
 
-            _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100))
+            _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100, CancellationToken.None))
                 .ReturnsAsync(new List<EventStoreRecord<DomainEvent>>
                 {
                     new EventStoreRecord<DomainEvent>
