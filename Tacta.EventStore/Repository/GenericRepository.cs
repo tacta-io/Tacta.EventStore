@@ -6,15 +6,16 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Dapper;
+using Tacta.Connection;
 
 namespace Tacta.EventStore.Repository
 {
     public abstract class GenericRepository : IGenericRepository
     {
-        private readonly ISqlConnectionFactory _sqlConnectionFactory;
+        private readonly IConnectionFactory _sqlConnectionFactory;
         private readonly string _table;
 
-        protected GenericRepository(ISqlConnectionFactory sqlConnectionFactory, string table)
+        protected GenericRepository(IConnectionFactory sqlConnectionFactory, string table)
         {
             _sqlConnectionFactory = sqlConnectionFactory;
             _table = table;
@@ -22,7 +23,7 @@ namespace Tacta.EventStore.Repository
 
         public async Task<T> GetAsync<T>(Guid id)
         {
-            using (var connection = _sqlConnectionFactory.SqlConnection())
+            using (var connection = _sqlConnectionFactory.Connection())
             {
                 return await connection.QuerySingleOrDefaultAsync<T>($"SELECT * FROM {_table} WHERE Id=@Id",
                     new {Id = id});
@@ -31,7 +32,7 @@ namespace Tacta.EventStore.Repository
 
         public async Task<IEnumerable<T>> GetAllAsync<T>()
         {
-            using (var connection = _sqlConnectionFactory.SqlConnection())
+            using (var connection = _sqlConnectionFactory.Connection())
             {
                 return await connection.QueryAsync<T>($"SELECT * FROM {_table}");
             }
@@ -41,7 +42,7 @@ namespace Tacta.EventStore.Repository
         {
             var insertQuery = GenerateInsertQuery<T>();
 
-            using (var connection = _sqlConnectionFactory.SqlConnection())
+            using (var connection = _sqlConnectionFactory.Connection())
             {
                 await connection.ExecuteAsync(insertQuery, t);
             }
@@ -52,7 +53,7 @@ namespace Tacta.EventStore.Repository
             var inserted = 0;
             var query = GenerateInsertQuery<T>();
 
-            using (var connection = _sqlConnectionFactory.SqlConnection())
+            using (var connection = _sqlConnectionFactory.Connection())
             {
                 inserted += await connection.ExecuteAsync(query, list);
 
@@ -64,7 +65,7 @@ namespace Tacta.EventStore.Repository
         {
             var updateQuery = GenerateUpdateQuery<T>();
 
-            using (var connection = _sqlConnectionFactory.SqlConnection())
+            using (var connection = _sqlConnectionFactory.Connection())
             {
                 await connection.ExecuteAsync(updateQuery, t);
             }
@@ -72,7 +73,7 @@ namespace Tacta.EventStore.Repository
 
         public async Task DeleteAsync(Guid id)
         {
-            using (var connection = _sqlConnectionFactory.SqlConnection())
+            using (var connection = _sqlConnectionFactory.Connection())
             {
                 await connection.ExecuteAsync($"DELETE FROM {_table} WHERE Id=@Id", new {Id = id});
             }
@@ -80,7 +81,7 @@ namespace Tacta.EventStore.Repository
 
         public async Task DeleteAllAsync()
         {
-            using (var connection = _sqlConnectionFactory.SqlConnection())
+            using (var connection = _sqlConnectionFactory.Connection())
             {
                 await connection.ExecuteAsync($"DELETE FROM {_table}");
             }

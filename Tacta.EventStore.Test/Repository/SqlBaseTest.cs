@@ -1,12 +1,13 @@
 ﻿using System;
 using Dapper;
-using Tacta.EventStore.Repository;
 using Tacta.EventStore.Test.Repository.ConnectionFactory;
+using Tacta.Connection;
+
 
 #if USE_SYSTEM_DATA_SQLCLIENT
     using System.Data.SqlClient;
 #elif USE_MICROSOFT_DATA_SQLCLIENT
-    using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 #endif
 
 namespace Tacta.EventStore.Test.Repository
@@ -22,7 +23,7 @@ namespace Tacta.EventStore.Test.Repository
         private readonly string _connectionString;
         private readonly string _dbName;
 
-        public ISqlConnectionFactory ConnectionFactory;
+        public IConnectionFactory ConnectionFactory;
 
         protected SqlBaseTest()
         {

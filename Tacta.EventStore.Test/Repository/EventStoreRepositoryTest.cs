@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Tacta.EventStore.Domain;
@@ -49,7 +48,7 @@ namespace Tacta.EventStore.Test.Repository
         [Fact]
         public async Task PassTransaction_InsertAsync_GetAsync_SingleAggregate()
         {
-            using var connection = ConnectionFactory.SqlConnection();
+            using var connection = ConnectionFactory.Connection();
             connection.Open();
             var transaction = connection.BeginTransaction();
             // Given
@@ -63,7 +62,7 @@ namespace Tacta.EventStore.Test.Repository
                 new EventRecord<DomainEvent>(booCreated.Id, booCreated.CreatedAt, booCreated)
             };
 
-            await _eventStoreRepository.SaveAsync(aggregateRecord, eventRecords, connection, transaction).ConfigureAwait(false);
+            await _eventStoreRepository.SaveAsync(aggregateRecord, eventRecords).ConfigureAwait(false);
             transaction.Commit();
             // Then
             var results = await _eventStoreRepository.GetAsync<DomainEvent>(booId).ConfigureAwait(false);

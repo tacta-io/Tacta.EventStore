@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using Tacta.EventStore.Domain;
@@ -29,7 +30,7 @@ namespace Tacta.EventStore.Test.Projector
             var userRegistered = new UserRegistered("userId", "John Doe", false);
             userRegistered.WithVersionAndSequence(1, 120);
 
-            _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100))
+            _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100, CancellationToken.None))
                 .ReturnsAsync(new List<EventStoreRecord<DomainEvent>>
                 {
                     new EventStoreRecord<DomainEvent>
@@ -59,7 +60,7 @@ namespace Tacta.EventStore.Test.Projector
             var userRegistered = new UserRegistered("userId", "John Doe", false);
             userRegistered.WithVersionAndSequence(1, 120);
 
-            _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100))
+            _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100, CancellationToken.None))
                 .ReturnsAsync(new List<EventStoreRecord<DomainEvent>>
                 {
                     new EventStoreRecord<DomainEvent>
@@ -93,7 +94,7 @@ namespace Tacta.EventStore.Test.Projector
             var userBanned = new UserBanned("userId");
             userRegistered.WithVersionAndSequence(2, 345);
 
-            _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100))
+            _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100, CancellationToken.None))
                 .ReturnsAsync(new List<EventStoreRecord<DomainEvent>>
                 {
                     new EventStoreRecord<DomainEvent>

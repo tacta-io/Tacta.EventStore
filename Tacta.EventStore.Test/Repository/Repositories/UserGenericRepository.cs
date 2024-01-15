@@ -1,10 +1,11 @@
-﻿using Tacta.EventStore.Repository;
+﻿using Tacta.Connection;
+using Tacta.EventStore.Repository;
 
 namespace Tacta.EventStore.Test.Repository.Repositories
 {
     internal class UserGenericRepository : GenericRepository
     {
-        public UserGenericRepository(ISqlConnectionFactory sqlConnectionFactory) : base(sqlConnectionFactory, SqlBaseTest.UserReadModelTableName)
+        public UserGenericRepository(IConnectionFactory sqlConnectionFactory) : base(sqlConnectionFactory, SqlBaseTest.UserReadModelTableName)
         {
         }
     }

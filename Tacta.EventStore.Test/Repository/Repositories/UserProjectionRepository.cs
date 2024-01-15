@@ -1,10 +1,11 @@
-﻿using Tacta.EventStore.Repository;
+﻿using Tacta.Connection;
+using Tacta.EventStore.Repository;
 
 namespace Tacta.EventStore.Test.Repository.Repositories
 {
     public class UserProjectionRepository : ProjectionRepository
     {
-        public UserProjectionRepository(ISqlConnectionFactory connectionFactory) : base(connectionFactory, SqlBaseTest.UserReadModelTableName)
+        public UserProjectionRepository(IConnectionFactory connectionFactory) : base(connectionFactory, SqlBaseTest.UserReadModelTableName)
         {
         }
     }

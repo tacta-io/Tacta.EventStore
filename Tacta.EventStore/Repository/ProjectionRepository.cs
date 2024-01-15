@@ -1,14 +1,15 @@
 ﻿using System.Threading.Tasks;
 using Dapper;
+using Tacta.Connection;
 
 namespace Tacta.EventStore.Repository
 {
     public abstract class ProjectionRepository : GenericRepository, IProjectionRepository
     {
-        private readonly ISqlConnectionFactory _connectionFactory;
+        private readonly IConnectionFactory _connectionFactory;
         private readonly string _table;
 
-        protected ProjectionRepository(ISqlConnectionFactory connectionFactory, string table) : base(connectionFactory, table)
+        protected ProjectionRepository(IConnectionFactory connectionFactory, string table) : base(connectionFactory, table)
         {
             _connectionFactory = connectionFactory;
             _table = table;
@@ -16,7 +17,7 @@ namespace Tacta.EventStore.Repository
 
         public async Task<int> GetSequenceAsync()
         {
-            using (var connection = _connectionFactory.SqlConnection())
+            using (var connection = _connectionFactory.Connection())
             {
                 var query = $"SELECT MAX (Sequence) FROM {_table}";
 
