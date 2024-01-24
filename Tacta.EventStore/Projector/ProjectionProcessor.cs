@@ -17,7 +17,7 @@ namespace Tacta.EventStore.Projector
         private readonly AsyncRetryPolicy _retryPolicy;
         private bool _isInitialized;
         private int _pivot;
-        
+        private bool _isProcessingPaused;
 
         public ProjectionProcessor(IEnumerable<IProjection> projections, IEventStoreRepository eventStoreRepository)
         {
@@ -50,6 +50,11 @@ namespace Tacta.EventStore.Projector
 
         public async Task<int> Process(int take = 100, bool processParallel = false)
         {
+            if (_isProcessingPaused)
+            {
+                return 0;
+            }
+            
             var processed = 0;
 
             await _retryPolicy.ExecuteAsync(async () =>
@@ -89,6 +94,25 @@ namespace Tacta.EventStore.Projector
             });
 
             return processed;
+        }
+        
+        public async Task Rebuild(IEnumerable<IProjection> projections = null)
+        {
+            _isProcessingPaused = true;
+            
+            await _retryPolicy.ExecuteAsync(async () =>
+            {
+                var projectionsToRebuild = projections ?? _projections;
+            
+                foreach (var projection in projectionsToRebuild)
+                {
+                    await projection.Rebuild();
+                }
+
+                _pivot = 0;
+            });
+            
+            _isProcessingPaused = false;
         }
 
         private async Task Initialize()
