@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Polly.Retry;
 using Tacta.EventStore.Domain;
@@ -17,7 +18,7 @@ namespace Tacta.EventStore.Projector
         private readonly AsyncRetryPolicy _retryPolicy;
         private bool _isInitialized;
         private int _pivot;
-        private bool _isProcessingPaused;
+        private readonly SemaphoreSlim _processingSemaphore = new SemaphoreSlim(1, 1);
 
         public ProjectionProcessor(IEnumerable<IProjection> projections, IEventStoreRepository eventStoreRepository)
         {
@@ -50,47 +51,46 @@ namespace Tacta.EventStore.Projector
 
         public async Task<int> Process(int take = 100, bool processParallel = false)
         {
-            if (_isProcessingPaused)
-            {
-                return 0;
-            }
-            
             var processed = 0;
-
+            
             await _retryPolicy.ExecuteAsync(async () =>
             {
-                if (!_isInitialized) await Initialize().ConfigureAwait(false);
+                if (!_isInitialized)
+                    await Initialize().ConfigureAwait(false);
 
-                var events = await Load(take).ConfigureAwait(false);
-
+                await _processingSemaphore.WaitAsync();
                 try
                 {
+                    var events = await Load(take).ConfigureAwait(false);
+                    
                     if (processParallel)
                     {
                         var options = new ParallelOptions { MaxDegreeOfParallelism = _projections.Count() };
 
-                        Parallel.ForEach(_projections, options, projection =>
-                        {
-                            projection.Apply(events).ConfigureAwait(false).GetAwaiter().GetResult();
-                        });
+                        Parallel.ForEach(_projections,
+                            options,
+                            projection => { projection.Apply(events).ConfigureAwait(false).GetAwaiter().GetResult(); });
                     }
                     else
                     {
                         foreach (var projection in _projections)
-                        {
                             await projection.Apply(events).ConfigureAwait(false);
-                        }
                     }
+
+                    processed = events.Count;
+
+                    if (processed > 0)
+                        _pivot = events.Max(x => x.Sequence);
                 }
                 catch (Exception ex)
                 {
                     Debug.WriteLine("Process exception {0}", ex);
                     throw;
                 }
-
-                processed = events.Count;
-
-                if (processed > 0) _pivot = events.Max(x => x.Sequence);
+                finally
+                {
+                    _processingSemaphore.Release();
+                }
             });
 
             return processed;
@@ -98,21 +98,24 @@ namespace Tacta.EventStore.Projector
         
         public async Task Rebuild(IEnumerable<IProjection> projections = null)
         {
-            _isProcessingPaused = true;
-            
-            await _retryPolicy.ExecuteAsync(async () =>
-            {
-                var projectionsToRebuild = projections ?? _projections;
-            
-                foreach (var projection in projectionsToRebuild)
-                {
-                    await projection.Rebuild();
-                }
+            await _processingSemaphore.WaitAsync();
 
-                _pivot = 0;
-            });
-            
-            _isProcessingPaused = false;
+            try
+            {
+                await _retryPolicy.ExecuteAsync(async () =>
+                {
+                    var projectionsToRebuild = projections ?? _projections;
+
+                    foreach (var projection in projectionsToRebuild)
+                        await projection.Rebuild();
+
+                    _pivot = 0;
+                });
+            }
+            finally
+            {
+                _processingSemaphore.Release();
+            }
         }
 
         private async Task Initialize()
