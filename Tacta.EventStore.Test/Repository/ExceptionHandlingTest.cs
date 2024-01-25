@@ -190,7 +190,7 @@ namespace Tacta.EventStore.Test.Repository
         public async Task GivenSequenceLessThenZero_WhenGetFromSequenceAsync_ShouldThrowInvalidSequenceException()
         {
             // Given
-            const int sequence = -1;
+            const long sequence = -1;
 
             // When + Then
             await Assert.ThrowsAsync<InvalidSequenceException>(() =>
@@ -201,7 +201,7 @@ namespace Tacta.EventStore.Test.Repository
         public async Task GivenNullAggregateId_WhenGetUntilAsync_ShouldThrowInvalidAggregateIdException()
         {
             // Given
-            const int sequence = 2;
+            const long sequence = 2;
             const string aggregateId = null;
 
             // When + Then
@@ -213,7 +213,7 @@ namespace Tacta.EventStore.Test.Repository
         public async Task GivenEmptyAggregateId_WhenGetUntilAsync_ShouldThrowInvalidAggregateIdException()
         {
             // Given
-            const int sequence = 2;
+            const long sequence = 2;
             var aggregateId = string.Empty;
 
             // When + Then
@@ -225,7 +225,7 @@ namespace Tacta.EventStore.Test.Repository
         public async Task GivenSequenceLessThenZero_WhenGetUntilAsync_ShouldThrowInvalidSequenceException()
         {
             // Given
-            const int sequence = -1;
+            const long sequence = -1;
             const string aggregateId = "AggregateId";
 
             // When + Then
@@ -237,7 +237,7 @@ namespace Tacta.EventStore.Test.Repository
         public async Task GivenZeroSequence_WhenGetUntilAsync_ShouldThrowInvalidSequenceException()
         {
             // Given
-            const int sequence = 0;
+            const long sequence = 0;
             const string aggregateId = "AggregateId";
 
             // When + Then

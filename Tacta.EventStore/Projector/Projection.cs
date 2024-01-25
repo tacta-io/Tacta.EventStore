@@ -8,7 +8,7 @@ namespace Tacta.EventStore.Projector
 {
     public abstract class Projection : IProjection
     {
-        private int _sequence;
+        private long _sequence;
 
         private readonly IProjectionRepository _projectionRepository;
 
@@ -33,6 +33,6 @@ namespace Tacta.EventStore.Projector
 
         public async Task On(IDomainEvent @event) => await Task.FromResult(_sequence = @event.Sequence).ConfigureAwait(false);
 
-        public int GetSequence() => _sequence;
+        public long GetSequence() => _sequence;
     }
 }
