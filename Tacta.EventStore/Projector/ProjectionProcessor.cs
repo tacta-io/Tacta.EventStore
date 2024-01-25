@@ -58,7 +58,7 @@ namespace Tacta.EventStore.Projector
                 if (!_isInitialized)
                     await Initialize().ConfigureAwait(false);
 
-                await _processingSemaphore.WaitAsync();
+                await _processingSemaphore.WaitAsync().ConfigureAwait(false);
                 try
                 {
                     var events = await Load(take).ConfigureAwait(false);
@@ -99,7 +99,6 @@ namespace Tacta.EventStore.Projector
         public async Task Rebuild(IEnumerable<IProjection> projections = null)
         {
             await _processingSemaphore.WaitAsync();
-
             try
             {
                 await _retryPolicy.ExecuteAsync(async () =>
