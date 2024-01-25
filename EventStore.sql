@@ -6,7 +6,7 @@ BEGIN
         [AggregateId] NVARCHAR(100) NOT NULL,
         [Aggregate] NVARCHAR(100) NOT NULL,
         [Version] INT NOT NULL,
-        [Sequence] INT IDENTITY(1,1) NOT NULL,
+        [Sequence] BIGINT IDENTITY(1,1) NOT NULL,
         [CreatedAt] DATETIME2(7) NOT NULL,
         [Payload] NVARCHAR(MAX) NOT NULL) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY];
 
