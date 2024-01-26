@@ -95,16 +95,25 @@ namespace Tacta.EventStore.Projector
 
             return processed;
         }
-        
-        public async Task Rebuild(IEnumerable<IProjection> projections = null)
+
+        public async Task Rebuild(IEnumerable<Type> projectionTypes = null)
         {
             await _processingSemaphore.WaitAsync();
             try
             {
+                var projectionsToRebuild = new List<IProjection>();
+                if (projectionTypes != null)
+                    foreach (var projectionType in projectionTypes)
+                    {
+                        var projection = _projections.FirstOrDefault(x => x.GetType() == projectionType);
+                        if (projection != null)
+                            projectionsToRebuild.Add(projection);
+                    }
+                else
+                    projectionsToRebuild.AddRange(_projections);
+
                 await _retryPolicy.ExecuteAsync(async () =>
                 {
-                    var projectionsToRebuild = projections ?? _projections;
-
                     foreach (var projection in projectionsToRebuild)
                         await projection.Rebuild();
 
