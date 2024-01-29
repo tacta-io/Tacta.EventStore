@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using Dapper;
 using Newtonsoft.Json;
 using Tacta.Connection;
@@ -53,7 +54,7 @@ namespace Tacta.EventStore.Repository
                 Aggregate = aggregateRecord.Name,
                 Version = ++version,
                 CreatedAt = eventRecord.CreatedAt,
-                Payload = JsonConvert.SerializeObject(eventRecord.Event, Formatting.Indented, _jsonSerializerSettings),
+                Payload = PayloadSerializer.Serialize(eventRecord.Event),
                 Id = eventRecord.Id,
                 Name = eventRecord.Event.GetType().Name
             });
@@ -64,6 +65,38 @@ namespace Tacta.EventStore.Repository
                 {
                     await connection.ExecuteAsync(StoredEvent.InsertQuery, records, transaction).ConfigureAwait(false);
                 }, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                if ((e is System.Data.SqlClient.SqlException || e is Microsoft.Data.SqlClient.SqlException) &&
+                    e.Message.Contains("ConcurrencyCheckIndex"))
+                    throw new ConcurrencyCheckException(e.Message);
+
+                throw;
+            }
+        }
+
+        public async Task SaveAsync<T>(IReadOnlyCollection<Aggregate<T>> aggregates,
+            CancellationToken cancellationToken = default)
+        {
+            if (aggregates == null || !aggregates.Any()) return;
+
+            var records = aggregates.SelectMany(aggregate => aggregate.ToStoredEvents());
+
+            try
+            {
+                if (Transaction.Current == null)
+                {
+                    using (var transactionScope = new TransactionScope())
+                    {
+                        await _sqlConnectionFactory.ExecuteWithTransactionIfExists(async (connection, transaction) =>
+                        {
+                            await connection.ExecuteAsync(StoredEvent.InsertQuery, records, transaction).ConfigureAwait(false);
+                        }, cancellationToken).ConfigureAwait(false);
+                        
+                        transactionScope.Complete();
+                    }
+                }
             }
             catch (Exception e)
             {
@@ -149,7 +182,7 @@ namespace Tacta.EventStore.Repository
 
                 return storedEvents.Select(@event => new EventStoreRecord<T>
                 {
-                    Event = JsonConvert.DeserializeObject<T>(@event.Payload, _jsonSerializerSettings),
+                    Event = PayloadSerializer.Deserialize<T>(@event),
                     AggregateId = @event.AggregateId,
                     CreatedAt = @event.CreatedAt,
                     Id = @event.Id,
