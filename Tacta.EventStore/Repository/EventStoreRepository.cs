@@ -85,17 +85,20 @@ namespace Tacta.EventStore.Repository
 
             try
             {
-                if (Transaction.Current == null)
+                var transactionOptions = new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted };
+                var transactionScope = new TransactionScope(
+                    TransactionScopeOption.Required,
+                    transactionOptions,
+                    TransactionScopeAsyncFlowOption.Enabled);
+                    
+                using (transactionScope)
                 {
-                    using (var transactionScope = new TransactionScope())
+                    await _sqlConnectionFactory.ExecuteWithTransactionIfExists(async (connection, transaction) =>
                     {
-                        await _sqlConnectionFactory.ExecuteWithTransactionIfExists(async (connection, transaction) =>
-                        {
-                            await connection.ExecuteAsync(StoredEvent.InsertQuery, records, transaction).ConfigureAwait(false);
-                        }, cancellationToken).ConfigureAwait(false);
-                        
-                        transactionScope.Complete();
-                    }
+                        await connection.ExecuteAsync(StoredEvent.InsertQuery, records, transaction).ConfigureAwait(false);
+                    }, cancellationToken).ConfigureAwait(false);
+                    
+                    transactionScope.Complete();
                 }
             }
             catch (Exception e)
