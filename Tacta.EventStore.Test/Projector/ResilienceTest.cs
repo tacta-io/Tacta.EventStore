@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector;
@@ -17,11 +18,13 @@ namespace Tacta.EventStore.Test.Projector
         private IProjection _userProjection;
         private Mock<IEventStoreRepository> _eventStoreRepository;
         private Mock<IProjectionRepository> _userProjectionRepository;
+        private readonly Mock<ILogger<ProjectionProcessor>> _logger;
 
         public ResilienceTest()
         {
             SetupProjectionRepository();
             SetupEventStoreRepository();
+            _logger = new Mock<ILogger<ProjectionProcessor>>();
         }
 
         [Fact]
@@ -32,7 +35,7 @@ namespace Tacta.EventStore.Test.Projector
                 // Given
                 _userProjection = new UserProjection(_userProjectionRepository.Object);
                 var projections = new List<IProjection> { _userProjection };
-                var processor = new ProjectionProcessor(projections, _eventStoreRepository.Object);
+                var processor = new ProjectionProcessor(projections, _eventStoreRepository.Object, _logger.Object);
 
                 // When
                 var numberOfProcessedEvents = await processor.Process().ConfigureAwait(false);

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Polly.Retry;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository;
@@ -14,15 +14,16 @@ namespace Tacta.EventStore.Projector
     {
         private readonly IEnumerable<IProjection> _projections;
         private readonly IEventStoreRepository _eventStoreRepository;
+        private readonly ILogger<ProjectionProcessor> _logger;
         private readonly AsyncRetryPolicy _retryPolicy;
         private bool _isInitialized;
         private int _pivot;
-        
 
-        public ProjectionProcessor(IEnumerable<IProjection> projections, IEventStoreRepository eventStoreRepository)
+        public ProjectionProcessor(IEnumerable<IProjection> projections, IEventStoreRepository eventStoreRepository, ILogger<ProjectionProcessor> logger)
         {
             _projections = projections;
             _eventStoreRepository = eventStoreRepository;
+            _logger = logger;
             _retryPolicy = new SqlServerResiliencePolicyBuilder().WithDefaults().BuildTransientErrorRetryPolicy();
         }
 
@@ -79,7 +80,7 @@ namespace Tacta.EventStore.Projector
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine("Process exception {0}", ex);
+                    _logger.LogError(ex, "Process exception");
                     throw;
                 }
 

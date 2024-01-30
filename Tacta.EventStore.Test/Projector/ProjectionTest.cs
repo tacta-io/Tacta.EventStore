@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector;
@@ -16,11 +17,13 @@ namespace Tacta.EventStore.Test.Projector
     {
         private readonly Mock<IProjectionRepository> _projectionRepository;
         private readonly Mock<IEventStoreRepository> _eventStoreRepository;
+        private readonly Mock<ILogger<ProjectionProcessor>> _logger;
 
         public ProjectionTest()
         {
             _projectionRepository = new Mock<IProjectionRepository>();
             _eventStoreRepository = new Mock<IEventStoreRepository>();
+            _logger = new Mock<ILogger<ProjectionProcessor>>();
         }
 
         [Fact]
@@ -46,7 +49,7 @@ namespace Tacta.EventStore.Test.Projector
 
             // When
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> {userProjection}, _eventStoreRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection> {userProjection}, _eventStoreRepository.Object, _logger.Object);
             await processor.Process();
 
             // Then
@@ -76,7 +79,7 @@ namespace Tacta.EventStore.Test.Projector
 
             // When
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection>(), _eventStoreRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection>(), _eventStoreRepository.Object, _logger.Object);
             await processor.Process();
 
             // Then
@@ -119,7 +122,7 @@ namespace Tacta.EventStore.Test.Projector
 
             // When
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _logger.Object);
             await processor.Process();
 
             // Then
