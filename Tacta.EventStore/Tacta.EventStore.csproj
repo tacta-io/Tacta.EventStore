@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.5.2</Version>
-    <PackageVersion>1.5.2</PackageVersion>
+    <Version>1.5.3</Version>
+    <PackageVersion>1.5.3</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Generic update method escapes column names</PackageReleaseNotes>
+    <PackageReleaseNotes>Automatic NuGet publish enabled</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
