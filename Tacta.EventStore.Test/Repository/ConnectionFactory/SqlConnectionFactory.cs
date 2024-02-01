@@ -25,12 +25,14 @@ namespace Tacta.EventStore.Test.Repository.ConnectionFactory
 
         public async Task ExecuteWithTransactionIfExists(Func<DbConnection, IDbTransaction, Task> func, CancellationToken ct = default)
         {
-            await func.Invoke(Connection(), null);
+            await using var connection = Connection();
+            await func.Invoke(connection, null);
         }
 
         public async Task<T> ExecuteWithTransactionIfExists<T>(Func<DbConnection, IDbTransaction, Task<T>> func, CancellationToken ct = default)
         {
-            return  await func.Invoke(Connection(), null);
+            await using var connection = Connection();
+            return await func.Invoke(Connection(), null);
         }
     }
 }

@@ -23,12 +23,12 @@ namespace Tacta.EventStore.Test.Repository
         private readonly string _connectionString;
         private readonly string _dbName;
 
-        public IConnectionFactory ConnectionFactory;
+        protected IConnectionFactory ConnectionFactory;
 
         protected SqlBaseTest()
         {
             _dbName = $"TmpTestDb{Guid.NewGuid().ToString("n").Substring(0, 8)}";
-            _connectionString = $@"Server=(localdb)\mssqlLocaldb; Database={_dbName}; Trusted_Connection=True;Max Pool Size=200";
+            _connectionString = $@"Server=(localdb)\mssqlLocaldb; Database={_dbName}; Trusted_Connection=True";
             ConnectionFactory = new SqlConnectionFactory(_connectionString);
 
             CreateDatabase();
