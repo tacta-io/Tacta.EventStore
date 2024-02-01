@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.5.3</Version>
-    <PackageVersion>1.5.3</PackageVersion>
+    <Version>1.6.1</Version>
+    <PackageVersion>1.6.1</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Automatic NuGet publish enabled</PackageReleaseNotes>
+    <PackageReleaseNotes>Added support for rebuilding projections</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>

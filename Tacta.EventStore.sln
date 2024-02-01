@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30907.101
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tacta.EventStore", "Tacta.EventStore\Tacta.EventStore.csproj", "{322FA018-D85F-4951-8AD4-733BF5063427}"
 EndProject
@@ -20,27 +20,27 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		MicrosoftDataSqlClient|Any CPU = MicrosoftDataSqlClient|Any CPU
 		Release|Any CPU = Release|Any CPU
 		SystemDataSqlClient|Any CPU = SystemDataSqlClient|Any CPU
-		MicrosoftDataSqlClient|Any CPU = MicrosoftDataSqlClient|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{322FA018-D85F-4951-8AD4-733BF5063427}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{322FA018-D85F-4951-8AD4-733BF5063427}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{322FA018-D85F-4951-8AD4-733BF5063427}.MicrosoftDataSqlClient|Any CPU.ActiveCfg = Debug|Any CPU
+		{322FA018-D85F-4951-8AD4-733BF5063427}.MicrosoftDataSqlClient|Any CPU.Build.0 = Debug|Any CPU
 		{322FA018-D85F-4951-8AD4-733BF5063427}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{322FA018-D85F-4951-8AD4-733BF5063427}.Release|Any CPU.Build.0 = Release|Any CPU
 		{322FA018-D85F-4951-8AD4-733BF5063427}.SystemDataSqlClient|Any CPU.ActiveCfg = SystemDataSqlClient|Any CPU
 		{322FA018-D85F-4951-8AD4-733BF5063427}.SystemDataSqlClient|Any CPU.Build.0 = SystemDataSqlClient|Any CPU
-		{322FA018-D85F-4951-8AD4-733BF5063427}.MicrosoftDataSqlClient|Any CPU.ActiveCfg = MicrosoftDataSqlClient|Any CPU
-		{322FA018-D85F-4951-8AD4-733BF5063427}.MicrosoftDataSqlClient|Any CPU.Build.0 = MicrosoftDataSqlClient|Any CPU
 		{93833D72-EC3A-4522-A984-F97C649DC078}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{93833D72-EC3A-4522-A984-F97C649DC078}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93833D72-EC3A-4522-A984-F97C649DC078}.MicrosoftDataSqlClient|Any CPU.ActiveCfg = MicrosoftDataSqlClient|Any CPU
+		{93833D72-EC3A-4522-A984-F97C649DC078}.MicrosoftDataSqlClient|Any CPU.Build.0 = MicrosoftDataSqlClient|Any CPU
 		{93833D72-EC3A-4522-A984-F97C649DC078}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93833D72-EC3A-4522-A984-F97C649DC078}.Release|Any CPU.Build.0 = Release|Any CPU
 		{93833D72-EC3A-4522-A984-F97C649DC078}.SystemDataSqlClient|Any CPU.ActiveCfg = SystemDataSqlClient|Any CPU
 		{93833D72-EC3A-4522-A984-F97C649DC078}.SystemDataSqlClient|Any CPU.Build.0 = SystemDataSqlClient|Any CPU
-		{93833D72-EC3A-4522-A984-F97C649DC078}.MicrosoftDataSqlClient|Any CPU.ActiveCfg = MicrosoftDataSqlClient|Any CPU
-		{93833D72-EC3A-4522-A984-F97C649DC078}.MicrosoftDataSqlClient|Any CPU.Build.0 = MicrosoftDataSqlClient|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -11,5 +11,7 @@ namespace Tacta.EventStore.Projector
         Task Initialize();
 
         int GetSequence();
+
+        Task Rebuild();
     }
 }

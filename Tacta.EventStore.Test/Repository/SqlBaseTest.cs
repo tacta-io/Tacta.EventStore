@@ -23,14 +23,16 @@ namespace Tacta.EventStore.Test.Repository
         private readonly string _connectionString;
         private readonly string _dbName;
 
-        public IConnectionFactory ConnectionFactory;
+        protected IConnectionFactory ConnectionFactory;
 
         protected SqlBaseTest()
         {
             _dbName = $"TmpTestDb{Guid.NewGuid().ToString("n").Substring(0, 8)}";
-            _connectionString = $@"Server=(localdb)\mssqlLocaldb; Database={_dbName}; Trusted_Connection=True;";
+            _connectionString = $@"Server=(localdb)\mssqlLocaldb; Database={_dbName}; Trusted_Connection=True";
+            ConnectionFactory = new SqlConnectionFactory(_connectionString);
 
             CreateDatabase();
+            CreateTables();
         }
 
         public void Dispose()
@@ -43,15 +45,14 @@ namespace Tacta.EventStore.Test.Repository
             var createDatabase = $@"CREATE DATABASE {_dbName};";
 
             using var masterConnection = new SqlConnection(MasterConnectionString);
-
             masterConnection.Execute(createDatabase);
-
+        }
+        
+        private void CreateTables()
+        {
             using var connection = new SqlConnection(_connectionString);
-
             CreateEventStoreTable(connection);
             CreateUserReadModelTable(connection);
-
-            ConnectionFactory = new SqlConnectionFactory(_connectionString);
         }
 
         private void DeleteDatabase()
