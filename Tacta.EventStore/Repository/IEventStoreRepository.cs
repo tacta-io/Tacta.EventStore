@@ -11,10 +11,10 @@ namespace Tacta.EventStore.Repository
             CancellationToken cancellationToken = default);
 
         Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string aggregateId, CancellationToken cancellationToken = default);
-        Task<IReadOnlyCollection<EventStoreRecord<T>>> GetFromSequenceAsync<T>(int sequence, int? take = null, CancellationToken cancellationToken = default);
+        Task<IReadOnlyCollection<EventStoreRecord<T>>> GetFromSequenceAsync<T>(long sequence, int? take = null, CancellationToken cancellationToken = default);
         Task<IReadOnlyCollection<EventStoreRecord<T>>> GetUntilAsync<T>(string aggregateId, Guid eventId, CancellationToken cancellationToken = default);
-        Task<IReadOnlyCollection<EventStoreRecord<T>>> GetUntilAsync<T>(string aggregateId, int sequence, CancellationToken cancellationToken = default);
-        Task<int> GetLatestSequence(CancellationToken cancellationToken = default);
+        Task<IReadOnlyCollection<EventStoreRecord<T>>> GetUntilAsync<T>(string aggregateId, long sequence, CancellationToken cancellationToken = default);
+        Task<long> GetLatestSequence(CancellationToken cancellationToken = default);
         Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string query, object param, CancellationToken cancellationToken = default);
     }
 }

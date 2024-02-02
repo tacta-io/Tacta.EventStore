@@ -11,7 +11,7 @@ namespace Tacta.EventStore.Domain
 
         [JsonIgnore] public int Version { get; private set; }
 
-        [JsonIgnore] public int Sequence { get; private set; }
+        [JsonIgnore] public long Sequence { get; private set; }
 
         public DateTime CreatedAt { get; set; }
 
@@ -27,7 +27,7 @@ namespace Tacta.EventStore.Domain
             (Id, AggregateId, CreatedAt) = (id, aggregateId, createdAt);
         }
 
-        public void WithVersionAndSequence(int version, int sequence)
+        public void WithVersionAndSequence(int version, long sequence)
         {
             (Version, Sequence) = (version, sequence);
         }

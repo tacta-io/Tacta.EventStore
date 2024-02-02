@@ -7,7 +7,7 @@ namespace Tacta.EventStore.Test.Repository.ReadModels
         private Guid _id;
         private Guid _eventId;
         private string _name;
-        private int _sequence;
+        private long _sequence;
         private DateTime _updatedAt;
 
         public static UserReadModelTestBuilder Default() => new UserReadModelTestBuilder()
@@ -35,7 +35,7 @@ namespace Tacta.EventStore.Test.Repository.ReadModels
             return this;
         }
 
-        public UserReadModelTestBuilder WithSequence(int sequence)
+        public UserReadModelTestBuilder WithSequence(long sequence)
         {
             _sequence = sequence;
             return this;

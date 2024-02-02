@@ -23,7 +23,7 @@ jobs:
         CSPROJ_PATH: ${{ vars.CSPROJ_PATH }}
   
   build:
-    runs-on: windows-2019
+    runs-on: windows-2022
     needs: [ validate ]
     steps:
     - uses: actions/checkout@v3
@@ -35,8 +35,9 @@ jobs:
         
     - name: Install LocalDb
       run: |
-        choco install mssqlserver2014-sqllocaldb
+        choco install sqllocaldb
         powershell -Command "Set-ExecutionPolicy Bypass"
+        sqllocaldb start "MSSQLLocalDB"
 
     - name: Restore dependencies
       run: dotnet restore

@@ -17,7 +17,7 @@ namespace Tacta.EventStore.Projector
         private readonly IEventStoreRepository _eventStoreRepository;
         private readonly AsyncRetryPolicy _retryPolicy;
         private bool _isInitialized;
-        private int _pivot;
+        private long _pivot;
         private readonly SemaphoreSlim _processingSemaphore = new SemaphoreSlim(1, 1);
 
         public ProjectionProcessor(IEnumerable<IProjection> projections, IEventStoreRepository eventStoreRepository)

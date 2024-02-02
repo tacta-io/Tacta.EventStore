@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.6.1</Version>
-    <PackageVersion>1.6.1</PackageVersion>
+    <Version>1.6.2</Version>
+    <PackageVersion>1.6.2</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Added support for rebuilding projections</PackageReleaseNotes>
+    <PackageReleaseNotes>Sequence type changed from int to long</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
