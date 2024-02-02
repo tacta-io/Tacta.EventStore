@@ -14,21 +14,21 @@ namespace Tacta.EventStore.Test.Repository
 {
     public abstract class SqlBaseTest : IDisposable
     {
-        public const string EventStoreTableName = "[dbo].[EventStore]";
         public const string UserReadModelTableName = "[dbo].[UserReadModel]";
-
+        private const string EventStoreTableName = "[dbo].[EventStore]";
+        
         private const string MasterConnectionString =
             @"Server=(localdb)\mssqlLocaldb; Database=master; Trusted_Connection=True;";
-
         private readonly string _connectionString;
         private readonly string _dbName;
 
-        protected IConnectionFactory ConnectionFactory;
+        protected readonly IConnectionFactory ConnectionFactory;
 
         protected SqlBaseTest()
         {
             _dbName = $"TmpTestDb{Guid.NewGuid().ToString("n").Substring(0, 8)}";
-            _connectionString = $@"Server=(localdb)\mssqlLocaldb; Database={_dbName}; Trusted_Connection=True";
+            _connectionString =
+                $@"Server=(localdb)\mssqlLocaldb;Database={_dbName};Trusted_Connection=True;Max Pool Size=200";
             ConnectionFactory = new SqlConnectionFactory(_connectionString);
 
             CreateDatabase();
