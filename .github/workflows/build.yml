@@ -37,6 +37,7 @@ jobs:
       run: |
         choco install sqllocaldb
         powershell -Command "Set-ExecutionPolicy Bypass"
+        sqllocaldb start "MSSQLLocalDB"
 
     - name: Restore dependencies
       run: dotnet restore
