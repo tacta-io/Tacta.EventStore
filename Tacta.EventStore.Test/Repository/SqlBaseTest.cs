@@ -35,10 +35,7 @@ namespace Tacta.EventStore.Test.Repository
             CreateTables();
         }
 
-        public void Dispose()
-        {
-            DeleteDatabase();
-        }
+        public void Dispose() => DeleteDatabase();
 
         private void CreateDatabase()
         {
@@ -50,9 +47,8 @@ namespace Tacta.EventStore.Test.Repository
         
         private void CreateTables()
         {
-            using var connection = new SqlConnection(_connectionString);
-            CreateEventStoreTable(connection);
-            CreateUserReadModelTable(connection);
+            CreateEventStoreTable();
+            CreateUserReadModelTable();
         }
 
         private void DeleteDatabase()
@@ -67,8 +63,9 @@ namespace Tacta.EventStore.Test.Repository
             connection.Execute(dropDatabase);
         }
 
-        private void CreateEventStoreTable(SqlConnection connection)
+        private void CreateEventStoreTable()
         {
+            using var connection = new SqlConnection(_connectionString);
             var sqlScript =
                 $@"CREATE TABLE {EventStoreTableName} (
                     [Id] UNIQUEIDENTIFIER NOT NULL,
@@ -101,8 +98,9 @@ namespace Tacta.EventStore.Test.Repository
             connection.Execute(sqlScript);
         }
 
-        private void CreateUserReadModelTable(SqlConnection connection)
+        private void CreateUserReadModelTable()
         {
+            using var connection = new SqlConnection(_connectionString);
             var sqlScript =
                 $@"CREATE TABLE {UserReadModelTableName}(
 	                [Id] [uniqueidentifier] NOT NULL,
