@@ -28,7 +28,7 @@ namespace Tacta.EventStore.Test.Repository
         {
             _dbName = $"TmpTestDb{Guid.NewGuid().ToString("n").Substring(0, 8)}";
             _connectionString =
-                $@"Server=(localdb)\mssqlLocaldb;Database={_dbName};Trusted_Connection=True;Max Pool Size=200";
+                $@"Server=(localdb)\mssqlLocaldb;Database={_dbName};Trusted_Connection=True;Max Pool Size=200;Connect Timeout=60";
             ConnectionFactory = new SqlConnectionFactory(_connectionString);
 
             CreateDatabase();
