@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -42,6 +43,59 @@ namespace Tacta.EventStore.Test.Projector
                 _userProjection.GetSequence().Should().Be(843);
                 (_userProjection as UserProjection).AppliedSequences.Should().BeEquivalentTo(new List<int> { 841, 842, 843 });
             }
+        }
+
+        [Fact]
+        public async Task WhileRebuildInProgress_ProcessShouldWait()
+        {
+            // Given
+            _userProjection = new VerySlowUserProjection(_userProjectionRepository.Object);
+            var projections = new List<IProjection> { _userProjection };
+            var processor = new ProjectionProcessor(projections, _eventStoreRepository.Object);
+
+            // When
+            var processTask1 = processor.Process().ConfigureAwait(false);
+            var rebuildTask = processor.Rebuild().ConfigureAwait(false);
+            var processTask2 = processor.Process().ConfigureAwait(false);
+
+            await processTask1;
+            await rebuildTask;
+            var numberOfProcessedEvents = await processTask2;
+
+            // Then
+            numberOfProcessedEvents.Should().Be(3);
+            _userProjection.GetSequence().Should().Be(843);
+            (_userProjection as VerySlowUserProjection)!.AppliedSequences
+                .Should().BeEquivalentTo(new List<int> { 841, 842, 843, 841, 842, 843 });
+        }
+
+        public class VerySlowUserProjection : Projection
+        {
+            public List<int> AppliedSequences { get; }
+
+            public VerySlowUserProjection(IProjectionRepository projectionRepository) : base(projectionRepository)
+            {
+                AppliedSequences = new List<int>();
+            }
+
+            public async Task On(UserRegistered @event)
+            {
+                AppliedSequences.Add(@event.Sequence);
+                await Task.Delay(2000);
+            }
+
+            public async Task On(UserBanned @event)
+            {
+                await Task.Delay(1000);
+                AppliedSequences.Add(@event.Sequence);
+            }
+
+            public async Task On(UserVerified @event)
+            {
+                await Task.Delay(3000);
+                AppliedSequences.Add(@event.Sequence);
+            }
+            
         }
 
         private void SetupProjectionRepository()
