@@ -54,7 +54,7 @@ namespace Tacta.EventStore.Test.Projector
             // Given
             _userProjection = new VerySlowUserProjection(_userProjectionRepository.Object);
             var projections = new List<IProjection> { _userProjection };
-            var processor = new ProjectionProcessor(projections, _eventStoreRepository.Object);
+            var processor = new ProjectionProcessor(projections, _eventStoreRepository.Object, _logger.Object);
 
             // When
             var processTask1 = processor.Process().ConfigureAwait(false);

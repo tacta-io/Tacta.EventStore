@@ -21,12 +21,21 @@ namespace Tacta.EventStore.Projector
         private long _pivot;
         private readonly SemaphoreSlim _processingSemaphore = new SemaphoreSlim(1, 1);
 
-        public ProjectionProcessor(IEnumerable<IProjection> projections, IEventStoreRepository eventStoreRepository, ILogger<ProjectionProcessor> logger)
+        public ProjectionProcessor(
+            IEnumerable<IProjection> projections,
+            IEventStoreRepository eventStoreRepository)
         {
             _projections = projections;
             _eventStoreRepository = eventStoreRepository;
-            _logger = logger;
             _retryPolicy = new SqlServerResiliencePolicyBuilder().WithDefaults().BuildTransientErrorRetryPolicy();
+        }
+        
+        public ProjectionProcessor(
+            IEnumerable<IProjection> projections,
+            IEventStoreRepository eventStoreRepository,
+            ILogger<ProjectionProcessor> logger) : this(projections, eventStoreRepository)
+        {
+            _logger = logger;
         }
 
         public async Task<string> Status(string service, int refreshRate = 5)
@@ -86,7 +95,7 @@ namespace Tacta.EventStore.Projector
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Process exception");
+                    _logger?.LogError(ex, "Process exception");
                     throw;
                 }
                 finally

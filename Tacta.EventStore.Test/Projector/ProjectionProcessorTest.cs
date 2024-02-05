@@ -72,7 +72,7 @@ namespace Tacta.EventStore.Test.Projector
             // Given
             var (aggregate, events) = CreateFooAggregateWithRegisteredEvents();
             await _eventStoreRepository.SaveAsync(aggregate, events);
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _loggerMock.Object);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
 
             // When
             var count = await processor.Process();
@@ -87,7 +87,7 @@ namespace Tacta.EventStore.Test.Projector
             // Given
             var (aggregate, events) = CreateFooAggregateWithRegisteredEvents();
             await _eventStoreRepository.SaveAsync(aggregate, events);
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _loggerMock.Object);
 
             // When
             await processor.Rebuild();
