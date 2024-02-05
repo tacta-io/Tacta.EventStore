@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector;
@@ -28,11 +29,13 @@ namespace Tacta.EventStore.Test.Projector
     {
         private readonly Mock<IProjection> _projectionMock;
         private readonly IEventStoreRepository _eventStoreRepository;
+        private readonly Mock<ILogger<ProjectionProcessor>> _loggerMock;
 
         public ProjectionProcessorTest()
         {
             _projectionMock = new Mock<IProjection>();
             _eventStoreRepository = new EventStoreRepository(ConnectionFactory);
+            _loggerMock = new Mock<ILogger<ProjectionProcessor>>();
         }
         
         [Fact]
@@ -40,7 +43,7 @@ namespace Tacta.EventStore.Test.Projector
         {
             // Given
             _projectionMock.Setup(x => x.Initialize()).Callback(() => throw new Exception());
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _loggerMock.Object);
 
             // When
             var _ = await Record.ExceptionAsync(async () => await processor.Process(100).ConfigureAwait(false));
@@ -54,7 +57,7 @@ namespace Tacta.EventStore.Test.Projector
         {
             // Given
             _projectionMock.Setup(x => x.Initialize()).Callback(() => throw GenerateRandomTransientSqlException());
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _loggerMock.Object);
 
             // When
             var _ = await Record.ExceptionAsync(async () => await processor.Process().ConfigureAwait(false));
@@ -84,7 +87,7 @@ namespace Tacta.EventStore.Test.Projector
             // Given
             var (aggregate, events) = CreateFooAggregateWithRegisteredEvents();
             await _eventStoreRepository.SaveAsync(aggregate, events);
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _loggerMock.Object);
 
             // When
             await processor.Rebuild();

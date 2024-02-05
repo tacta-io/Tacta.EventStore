@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.6.2</Version>
-    <PackageVersion>1.6.2</PackageVersion>
+    <Version>1.6.3</Version>
+    <PackageVersion>1.6.3</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Sequence type changed from int to long</PackageReleaseNotes>
+    <PackageReleaseNotes>Projection processor logs processing exception</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
@@ -24,6 +24,7 @@
     <PackageReference Include="Dapper" Version="2.0.143" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Polly" Version="7.2.4" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
