@@ -4,7 +4,7 @@ namespace Tacta.EventStore.Domain
 {
     public interface IDomainEvent
     {
-        int Sequence { get; }
+        long Sequence { get; }
 
         int Version { get; }
         

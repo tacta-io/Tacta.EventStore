@@ -9,11 +9,11 @@ namespace Tacta.EventStore.Test.Projector.Projections
 {
     public class UserProjection : Projection
     {
-        public List<int> AppliedSequences { get; }
+        public List<long> AppliedSequences { get; }
 
         public UserProjection(IProjectionRepository projectionRepository) : base(projectionRepository)
         {
-            AppliedSequences = new List<int>();
+            AppliedSequences = new List<long>();
         }
 
         public async Task On(UserRegistered @event)

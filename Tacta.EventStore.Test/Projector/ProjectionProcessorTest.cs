@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,8 @@ using Moq;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector;
 using Tacta.EventStore.Repository;
+using Tacta.EventStore.Test.Projector.DomainEvents;
+using Tacta.EventStore.Test.Projector.Projections;
 using Tacta.EventStore.Test.Repository;
 using Tacta.EventStore.Test.Repository.DomainEvents;
 using Xunit;
@@ -76,6 +79,35 @@ namespace Tacta.EventStore.Test.Projector
 
             // Then
             count.Should().Be(3);
+        }
+
+        [Fact]
+        public async Task Rebuild_ShouldInvokeRebuildOnRepositories()
+        {
+            // Given
+            var (aggregate, events) = CreateFooAggregateWithRegisteredEvents();
+            await _eventStoreRepository.SaveAsync(aggregate, events);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+
+            // When
+            await processor.Rebuild();
+
+            // Then
+            _projectionMock.Verify(p => p.Rebuild());
+        }
+
+        [Fact]
+        public async Task Rebuild_OnTransientSqlException_ShouldCallRebuildMethodAtLeastTwice()
+        {
+            // Given
+            _projectionMock.Setup(x => x.Rebuild()).Callback(() => throw GenerateRandomTransientSqlException());
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+
+            // When
+            var _ = await Record.ExceptionAsync(async () => await processor.Rebuild().ConfigureAwait(false));
+
+            // Then
+            _projectionMock.Verify(x => x.Rebuild(), Times.AtLeast(2));
         }
 
         private static SqlException GenerateRandomTransientSqlException()

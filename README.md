@@ -124,7 +124,7 @@ When creating a read model, do not forget ``` Sequence ``` property as it is man
 ```c#
    public sealed class TicketReadModel
    {
-       public int Sequence { get; set; } // required
+       public long Sequence { get; set; } // required
        public string TicketId { get; set; }
        public string? SprintId { get; set; }
        public string BoardId { get; set; }

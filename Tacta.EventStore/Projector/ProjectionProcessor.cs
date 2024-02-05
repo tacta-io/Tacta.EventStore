@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Polly.Retry;
@@ -17,7 +18,8 @@ namespace Tacta.EventStore.Projector
         private readonly ILogger<ProjectionProcessor> _logger;
         private readonly AsyncRetryPolicy _retryPolicy;
         private bool _isInitialized;
-        private int _pivot;
+        private long _pivot;
+        private readonly SemaphoreSlim _processingSemaphore = new SemaphoreSlim(1, 1);
 
         public ProjectionProcessor(IEnumerable<IProjection> projections, IEventStoreRepository eventStoreRepository, ILogger<ProjectionProcessor> logger)
         {
@@ -52,44 +54,78 @@ namespace Tacta.EventStore.Projector
         public async Task<int> Process(int take = 100, bool processParallel = false)
         {
             var processed = 0;
-
+            
             await _retryPolicy.ExecuteAsync(async () =>
             {
-                if (!_isInitialized) await Initialize().ConfigureAwait(false);
+                if (!_isInitialized)
+                    await Initialize().ConfigureAwait(false);
 
-                var events = await Load(take).ConfigureAwait(false);
-
+                await _processingSemaphore.WaitAsync().ConfigureAwait(false);
                 try
                 {
+                    var events = await Load(take).ConfigureAwait(false);
+                    
                     if (processParallel)
                     {
                         var options = new ParallelOptions { MaxDegreeOfParallelism = _projections.Count() };
 
-                        Parallel.ForEach(_projections, options, projection =>
-                        {
-                            projection.Apply(events).ConfigureAwait(false).GetAwaiter().GetResult();
-                        });
+                        Parallel.ForEach(_projections,
+                            options,
+                            projection => { projection.Apply(events).ConfigureAwait(false).GetAwaiter().GetResult(); });
                     }
                     else
                     {
                         foreach (var projection in _projections)
-                        {
                             await projection.Apply(events).ConfigureAwait(false);
-                        }
                     }
+
+                    processed = events.Count;
+
+                    if (processed > 0)
+                        _pivot = events.Max(x => x.Sequence);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Process exception");
                     throw;
                 }
-
-                processed = events.Count;
-
-                if (processed > 0) _pivot = events.Max(x => x.Sequence);
+                finally
+                {
+                    _processingSemaphore.Release();
+                }
             });
 
             return processed;
+        }
+
+        public async Task Rebuild(IEnumerable<Type> projectionTypes = null)
+        {
+            await _processingSemaphore.WaitAsync();
+            try
+            {
+                var projectionsToRebuild = new List<IProjection>();
+                if (projectionTypes != null)
+                    foreach (var projectionType in projectionTypes)
+                    {
+                        var projection = _projections.FirstOrDefault(x => x.GetType() == projectionType);
+                        if (projection != null)
+                            projectionsToRebuild.Add(projection);
+                    }
+                else
+                    projectionsToRebuild.AddRange(_projections);
+
+                await _retryPolicy.ExecuteAsync(async () =>
+                {
+                    foreach (var projection in projectionsToRebuild)
+                        await projection.Rebuild();
+
+                    _pivot = 0;
+                });
+            }
+            finally
+            {
+                _processingSemaphore.Release();
+            }
         }
 
         private async Task Initialize()

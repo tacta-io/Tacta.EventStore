@@ -1,0 +1,26 @@
+name: publish nuget package
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ vars.DOTNET_VERSION }}
+
+    - name: Build sln to generate nupkg
+      run: dotnet build
+
+    - name: Publish NuGet package
+      run: |
+        for file in ${{ vars.PACKAGE_DIRECTORY }}/*.nupkg; do
+          dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source ${{ vars.NUGET_SOURCE }};
+        done
