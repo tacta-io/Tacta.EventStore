@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Transactions;
 using Dapper;
 using Newtonsoft.Json;
 using Tacta.Connection;
+using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository.Exceptions;
 
 namespace Tacta.EventStore.Repository
@@ -76,7 +76,7 @@ namespace Tacta.EventStore.Repository
             }
         }
 
-        public async Task SaveAsync<T>(IReadOnlyCollection<Aggregate<T>> aggregates,
+        public async Task SaveAsync(IReadOnlyCollection<Aggregate> aggregates,
             CancellationToken cancellationToken = default)
         {
             if (aggregates == null || !aggregates.Any()) return;
@@ -98,6 +98,20 @@ namespace Tacta.EventStore.Repository
 
                 throw;
             }
+        }
+        
+        public async Task SaveAsync<T, TId>(T aggregateRoot) where T : AggregateRoot<TId> where TId : EntityId
+        {
+            var aggregate = new Aggregate(aggregateRoot);
+
+            await SaveAsync(aggregate.AggregateRecord, aggregate.EventRecords).ConfigureAwait(false);
+        }
+        
+        public async Task SaveAsync<T, TId>(IEnumerable<T> aggregateRoots) where T : AggregateRoot<TId> where TId : EntityId
+        {
+            var aggregates = aggregateRoots.Select(ar => new Aggregate(ar)).ToList().AsReadOnly();
+
+            await SaveAsync(aggregates).ConfigureAwait(false);
         }
 
         public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string aggregateId, CancellationToken cancellationToken = default)
