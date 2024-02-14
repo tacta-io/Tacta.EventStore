@@ -54,7 +54,7 @@ namespace Tacta.EventStore.Repository
                 Aggregate = aggregateRecord.Name,
                 Version = ++version,
                 CreatedAt = eventRecord.CreatedAt,
-                Payload = PayloadSerializer.Serialize(eventRecord.Event),
+                Payload = JsonConvert.SerializeObject(eventRecord.Event, Formatting.Indented, _jsonSerializerSettings),
                 Id = eventRecord.Id,
                 Name = eventRecord.Event.GetType().Name
             });
@@ -81,7 +81,7 @@ namespace Tacta.EventStore.Repository
         {
             if (aggregates == null || !aggregates.Any()) return;
 
-            var records = aggregates.SelectMany(aggregate => aggregate.ToStoredEvents());
+            var records = aggregates.SelectMany(aggregate => aggregate.ToStoredEvents(_jsonSerializerSettings));
 
             try
             {
@@ -188,7 +188,7 @@ namespace Tacta.EventStore.Repository
 
                 return storedEvents.Select(@event => new EventStoreRecord<T>
                 {
-                    Event = PayloadSerializer.Deserialize<T>(@event),
+                    Event = JsonConvert.DeserializeObject<T>(@event.Payload, _jsonSerializerSettings),
                     AggregateId = @event.AggregateId,
                     CreatedAt = @event.CreatedAt,
                     Id = @event.Id,

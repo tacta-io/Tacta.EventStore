@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository.Exceptions;
 
@@ -37,7 +38,7 @@ namespace Tacta.EventStore.Repository
             EventRecords = eventRecords;
         }
 
-        internal IEnumerable<StoredEvent> ToStoredEvents()
+        internal IEnumerable<StoredEvent> ToStoredEvents(JsonSerializerSettings jsonSerializerSettings)
         {
             var version = AggregateRecord.Version;
 
@@ -48,7 +49,7 @@ namespace Tacta.EventStore.Repository
                     Aggregate = AggregateRecord.Name,
                     Version = ++version,
                     CreatedAt = eventRecord.CreatedAt,
-                    Payload = PayloadSerializer.Serialize(eventRecord.Event),
+                    Payload = JsonConvert.SerializeObject(eventRecord.Event, Formatting.Indented, jsonSerializerSettings),
                     Id = eventRecord.Id,
                     Name = eventRecord.Event.GetType().Name
                 });
