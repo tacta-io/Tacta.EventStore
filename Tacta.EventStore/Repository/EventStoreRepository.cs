@@ -80,6 +80,12 @@ namespace Tacta.EventStore.Repository
             CancellationToken cancellationToken = default)
         {
             if (aggregates == null || !aggregates.Any()) return;
+            
+            if (aggregates.Any(a => a == null || a.AggregateRecord == null))
+                throw new InvalidAggregateRecordException("No Aggregate record can be null");
+            
+            if (aggregates.Any(a => a.EventRecords == null || a.EventRecords.Any(r => r == null)))
+                throw new InvalidEventRecordException("Event record cannot be null");
 
             var records = aggregates.SelectMany(aggregate => aggregate.ToStoredEvents(_jsonSerializerSettings));
 

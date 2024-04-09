@@ -114,7 +114,6 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Throws<InvalidEventRecordException>(() => new EventRecord<DomainEvent>(eventId, createdAt, @event));
         }
 
-
         [Fact]
         public async Task GivenNullAggregateRecord_WhenSaveAsync_ShouldThrowInvalidAggregateRecordException()
         {
@@ -129,6 +128,24 @@ namespace Tacta.EventStore.Test.Repository
             // When + Then
             await Assert.ThrowsAsync<InvalidAggregateRecordException>(() =>
               _eventStoreRepository.SaveAsync(aggregateRecord, eventRecords));
+        }
+        
+        [Fact]
+        public async Task GivenNullAggregateRecord_WhenCollectionSaveAsync_ShouldThrowInvalidAggregateRecordException()
+        {
+            // Given
+            var @event = new BooCreated("AggregateId", 100M, false);
+            AggregateRecord aggregateRecord = new AggregateRecord("AggregateId", "aggregate", 1);
+            var eventRecords = new List<EventRecord<IDomainEvent>>
+            {
+                null
+            };
+
+            var aggregate = new Aggregate(aggregateRecord, eventRecords);
+
+            // When + Then
+            await Assert.ThrowsAsync<InvalidEventRecordException>(() =>
+                _eventStoreRepository.SaveAsync(new List<Aggregate> { aggregate }));
         }
 
         [Fact]
