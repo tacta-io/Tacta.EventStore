@@ -15,13 +15,13 @@ namespace Tacta.EventStore.Repository
             _table = table;
         }
 
-        public async Task<int> GetSequenceAsync()
+        public async Task<long> GetSequenceAsync()
         {
             using (var connection = _connectionFactory.Connection())
             {
                 var query = $"SELECT MAX (Sequence) FROM {_table}";
 
-                var sequence = await connection.QuerySingleOrDefaultAsync<int?>(query).ConfigureAwait(false);
+                var sequence = await connection.QuerySingleOrDefaultAsync<long?>(query).ConfigureAwait(false);
 
                 return sequence ?? default;
             }

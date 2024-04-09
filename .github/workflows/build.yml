@@ -1,0 +1,52 @@
+name: validation build
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    types: [ opened, synchronize ]
+
+jobs:
+  
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      
+    # Run NuGet validation (versions and release notes)
+    - name: Validate csproj changes
+      run: |
+        chmod +x .github/scripts/validate_csproj.sh
+        ./.github/scripts/validate_csproj.sh
+      env:
+        SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
+        TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
+        CSPROJ_PATH: ${{ vars.CSPROJ_PATH }}
+  
+  build:
+    runs-on: windows-2022
+    needs: [ validate ]
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ vars.DOTNET_VERSION }}
+        
+    - name: Install LocalDb
+      run: |
+        choco install sqllocaldb
+        powershell -Command "Set-ExecutionPolicy Bypass"
+        sqllocaldb start "MSSQLLocalDB"
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build solution
+      run: dotnet build
+
+    - name: Test with System.Data.SqlClient
+      run: dotnet test -c SystemDataSqlClient
+      
+    - name: Test with Microsoft.Data.SqlClient
+      run: dotnet test -c MicrosoftDataSqlClient

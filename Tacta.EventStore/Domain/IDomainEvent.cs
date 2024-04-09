@@ -6,7 +6,7 @@ namespace Tacta.EventStore.Domain
     {
         Guid Id { get; }
         
-        int Sequence { get; }
+        long Sequence { get; }
 
         int Version { get; }
         

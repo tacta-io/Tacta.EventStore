@@ -14,44 +14,41 @@ namespace Tacta.EventStore.Test.Repository
 {
     public abstract class SqlBaseTest : IDisposable
     {
-        public const string EventStoreTableName = "[dbo].[EventStore]";
         public const string UserReadModelTableName = "[dbo].[UserReadModel]";
-
+        private const string EventStoreTableName = "[dbo].[EventStore]";
+        
         private const string MasterConnectionString =
             @"Server=(localdb)\mssqlLocaldb; Database=master; Trusted_Connection=True;";
-
         private readonly string _connectionString;
         private readonly string _dbName;
 
-        public IConnectionFactory ConnectionFactory;
+        protected readonly IConnectionFactory ConnectionFactory;
 
         protected SqlBaseTest()
         {
             _dbName = $"TmpTestDb{Guid.NewGuid().ToString("n").Substring(0, 8)}";
-            _connectionString = $@"Server=(localdb)\mssqlLocaldb; Database={_dbName}; Trusted_Connection=True;";
+            _connectionString =
+                $@"Server=(localdb)\mssqlLocaldb;Database={_dbName};Trusted_Connection=True;Max Pool Size=200;Connect Timeout=60";
+            ConnectionFactory = new SqlConnectionFactory(_connectionString);
 
             CreateDatabase();
+            CreateTables();
         }
 
-        public void Dispose()
-        {
-            DeleteDatabase();
-        }
+        public void Dispose() => DeleteDatabase();
 
         private void CreateDatabase()
         {
             var createDatabase = $@"CREATE DATABASE {_dbName};";
 
             using var masterConnection = new SqlConnection(MasterConnectionString);
-
             masterConnection.Execute(createDatabase);
-
-            using var connection = new SqlConnection(_connectionString);
-
-            CreateEventStoreTable(connection);
-            CreateUserReadModelTable(connection);
-
-            ConnectionFactory = new SqlConnectionFactory(_connectionString);
+        }
+        
+        private void CreateTables()
+        {
+            CreateEventStoreTable();
+            CreateUserReadModelTable();
         }
 
         private void DeleteDatabase()
@@ -66,8 +63,9 @@ namespace Tacta.EventStore.Test.Repository
             connection.Execute(dropDatabase);
         }
 
-        private void CreateEventStoreTable(SqlConnection connection)
+        private void CreateEventStoreTable()
         {
+            using var connection = new SqlConnection(_connectionString);
             var sqlScript =
                 $@"CREATE TABLE {EventStoreTableName} (
                     [Id] UNIQUEIDENTIFIER NOT NULL,
@@ -100,8 +98,9 @@ namespace Tacta.EventStore.Test.Repository
             connection.Execute(sqlScript);
         }
 
-        private void CreateUserReadModelTable(SqlConnection connection)
+        private void CreateUserReadModelTable()
         {
+            using var connection = new SqlConnection(_connectionString);
             var sqlScript =
                 $@"CREATE TABLE {UserReadModelTableName}(
 	                [Id] [uniqueidentifier] NOT NULL,

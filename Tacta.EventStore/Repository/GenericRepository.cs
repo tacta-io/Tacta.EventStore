@@ -94,11 +94,11 @@ namespace Tacta.EventStore.Repository
 
             properties.ForEach(property =>
             {
-                if (!property.Equals("Id")) updateQuery.Append($"{property}=@{property},");
+                if (!property.Equals("Id")) updateQuery.Append($"[{property}]=@{property},");
             });
 
             updateQuery.Remove(updateQuery.Length - 1, 1);
-            updateQuery.Append(" WHERE Id=@Id");
+            updateQuery.Append(" WHERE [Id]=@Id");
 
             return updateQuery.ToString();
         }

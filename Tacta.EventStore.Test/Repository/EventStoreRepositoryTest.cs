@@ -248,7 +248,7 @@ namespace Tacta.EventStore.Test.Repository
         [InlineData(4, 50, 0)]
         [InlineData(4, 1, 0)]
         [InlineData(2, null, 2)]
-        public async Task GetFromSequenceAsync(int sequence, int? take, int count)
+        public async Task GetFromSequenceAsync(long sequence, int? take, int count)
         {
             // Given
             await StoreBooCreatedAndActivated("booId1");

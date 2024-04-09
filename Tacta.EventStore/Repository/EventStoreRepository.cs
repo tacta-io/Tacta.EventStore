@@ -124,7 +124,7 @@ namespace Tacta.EventStore.Repository
             return await GetAsync<T>(StoredEvent.SelectQuery, param, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetFromSequenceAsync<T>(int sequence,
+        public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetFromSequenceAsync<T>(long sequence,
             int? take = null, CancellationToken cancellationToken = default)
         {
             if (sequence < 0)
@@ -152,7 +152,7 @@ namespace Tacta.EventStore.Repository
             return await GetAsync<T>(StoredEvent.SelectUntilEventQuery, param, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetUntilAsync<T>(string aggregateId, int sequence, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetUntilAsync<T>(string aggregateId, long sequence, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(aggregateId))
                 throw new InvalidAggregateIdException("Aggregate Id cannot be null or white space");
@@ -165,7 +165,7 @@ namespace Tacta.EventStore.Repository
             return await GetAsync<T>(StoredEvent.SelectUntilSequenceQuery, param, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<int> GetLatestSequence(CancellationToken cancellationToken = default)
+        public async Task<long> GetLatestSequence(CancellationToken cancellationToken = default)
         {
             return await _sqlConnectionFactory.ExecuteWithTransactionIfExists(async (connection, transaction) =>
             {
