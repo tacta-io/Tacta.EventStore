@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.6.2</Version>
-    <PackageVersion>1.6.2</PackageVersion>
+    <Version>1.6.3</Version>
+    <PackageVersion>1.6.3</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Sequence type changed from int to long</PackageReleaseNotes>
+    <PackageReleaseNotes>Updated Tacta.Connection nuget</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
@@ -27,7 +27,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Polly" Version="7.2.4" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
-    <PackageReference Include="Tacta.Connection" Version="1.0.0" />
+    <PackageReference Include="Tacta.Connection" Version="1.0.1" />
   </ItemGroup>
 
   <ItemGroup>
