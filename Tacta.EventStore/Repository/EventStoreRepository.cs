@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Tacta.Connection;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository.Exceptions;
+using Tacta.EventStore.Repository.Models;
 
 namespace Tacta.EventStore.Repository
 {

@@ -6,7 +6,7 @@ namespace Tacta.EventStore.Domain
     public abstract class DomainEvent : IDomainEvent
     {
         public Guid Id { get; }
-        
+
         public string AggregateId { get; }
 
         [JsonIgnore] public int Version { get; private set; }

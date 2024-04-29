@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository;
 using Tacta.EventStore.Repository.Exceptions;
+using Tacta.EventStore.Repository.Models;
 using Tacta.EventStore.Test.Repository.DomainEvents;
 using Xunit;
 

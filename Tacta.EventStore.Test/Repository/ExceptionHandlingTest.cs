@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository;
 using Tacta.EventStore.Repository.Exceptions;
+using Tacta.EventStore.Repository.Models;
 using Tacta.EventStore.Test.Repository.DomainEvents;
 using Xunit;
 
@@ -131,7 +132,22 @@ namespace Tacta.EventStore.Test.Repository
         }
         
         [Fact]
-        public async Task GivenNullAggregateRecord_WhenCollectionSaveAsync_ShouldThrowInvalidAggregateRecordException()
+        public void GivenNullAggregateRecord_WhenCreatingAggregate_ShouldThrowInvalidAggregateRecordException()
+        {
+            // Given
+            var @event = new BooCreated("AggregateId", 100M, false);
+            AggregateRecord aggregateRecord = null;
+            var eventRecords = new List<EventRecord<IDomainEvent>>
+            {
+                new EventRecord<IDomainEvent>(Guid.NewGuid(), DateTime.Now, new BooActivated("AggregateId"))
+            };
+
+            // When + Then
+            Assert.Throws<InvalidAggregateRecordException>(() => new Aggregate(aggregateRecord, eventRecords));
+        }
+        
+        [Fact]
+        public async Task GivenNullEventRecord_WhenCollectionSaveAsync_ShouldThrowInvalidAggregateRecordException()
         {
             // Given
             var @event = new BooCreated("AggregateId", 100M, false);
@@ -146,6 +162,18 @@ namespace Tacta.EventStore.Test.Repository
             // When + Then
             await Assert.ThrowsAsync<InvalidEventRecordException>(() =>
                 _eventStoreRepository.SaveAsync(new List<Aggregate> { aggregate }));
+        }
+        
+        [Fact]
+        public async void GivenNullEventRecords_WhenCreatingAggregate_ShouldThrowInvalidEventRecordException()
+        {
+            // Given
+            var @event = new BooCreated("AggregateId", 100M, false);
+            AggregateRecord aggregateRecord = new AggregateRecord("AggregateId", "aggregate", 1);
+            List<EventRecord<IDomainEvent>> eventRecords = null;
+
+            // When + Then
+            Assert.Throws<InvalidEventRecordException>(() => new Aggregate(aggregateRecord, eventRecords));
         }
 
         [Fact]

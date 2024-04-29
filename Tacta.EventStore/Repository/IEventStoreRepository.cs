@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Tacta.EventStore.Repository.Models;
 
 namespace Tacta.EventStore.Repository
 {

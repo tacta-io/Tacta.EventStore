@@ -12,6 +12,8 @@ namespace Tacta.EventStore.Test.Domain.AggregateRoots
 
         public string Summary { get; private set; }
 
+        public List<SubTask> SubTasks { get; private set; } = new List<SubTask>();
+
         private BacklogItem() { }
 
         public BacklogItem(IReadOnlyCollection<IDomainEvent> events) : base(events)
@@ -30,7 +32,7 @@ namespace Tacta.EventStore.Test.Domain.AggregateRoots
         public TaskId AddTask(string title)
         {
             var task = new SubTask(new TaskId(), title);
-            AddDomainEvent(new SubTaskAdded(task.Id, task.Title));
+            Apply(new SubTaskAdded(task.Id, task.Title));
 
             return task.Id;
         }
@@ -39,6 +41,12 @@ namespace Tacta.EventStore.Test.Domain.AggregateRoots
         {
             Id = @event.BacklogItemId;
             Summary = @event.Summary;
+        }
+
+        public void On(SubTaskAdded @event)
+        {
+            var subTask = new SubTask(@event.TaskId, @event.Title);
+            SubTasks.Add(subTask);
         }
     }
 }

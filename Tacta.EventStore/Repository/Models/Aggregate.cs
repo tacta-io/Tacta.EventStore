@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository.Exceptions;
 
-namespace Tacta.EventStore.Repository
+namespace Tacta.EventStore.Repository.Models
 {
     public sealed class Aggregate
     {
