@@ -107,14 +107,14 @@ namespace Tacta.EventStore.Repository
             }
         }
         
-        public async Task SaveAsync<T, TId>(T aggregateRoot) where T : AggregateRoot<TId> where TId : EntityId
+        public async Task SaveAsync<T>(T aggregateRoot) where T : IAggregateRoot<IEntityId>
         {
             var aggregate = new Aggregate(aggregateRoot);
 
             await SaveAsync(aggregate.AggregateRecord, aggregate.EventRecords).ConfigureAwait(false);
         }
         
-        public async Task SaveAsync<T, TId>(IEnumerable<T> aggregateRoots) where T : AggregateRoot<TId> where TId : EntityId
+        public async Task SaveAsync<T>(IEnumerable<T> aggregateRoots) where T : IAggregateRoot<IEntityId>
         {
             var aggregates = aggregateRoots.Select(ar => new Aggregate(ar)).ToList().AsReadOnly();
 

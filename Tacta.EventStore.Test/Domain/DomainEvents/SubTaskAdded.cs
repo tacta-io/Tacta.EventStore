@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Test.Domain.Identities;
 
@@ -10,10 +12,18 @@ namespace Tacta.EventStore.Test.Domain.DomainEvents
 
         public TaskId TaskId { get; }
 
-        public SubTaskAdded(TaskId id, string title) : base(id.ToString())
+        public SubTaskAdded(TaskId taskId, string title) : base(taskId.ToString())
         {
             CreatedAt = DateTime.Now;
-            TaskId = id;
+            TaskId = taskId;
+            Title = title;
+        }
+        
+        [JsonConstructor]
+        public SubTaskAdded(Guid id, string aggregateId, DateTime createdAt, TaskId taskId, string title) 
+            : base(id, aggregateId, createdAt)
+        {
+            TaskId = taskId;
             Title = title;
         }
     }

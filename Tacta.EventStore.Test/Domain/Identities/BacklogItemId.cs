@@ -1,25 +1,27 @@
 ﻿using System;
+using Newtonsoft.Json;
 using Tacta.EventStore.Domain;
 
 namespace Tacta.EventStore.Test.Domain.Identities
 {
     public class BacklogItemId : EntityId
     {
-        private readonly Guid _id;
+        public Guid Id { get; }
 
         public BacklogItemId()
         {
-            _id = Guid.NewGuid();
+            Id = Guid.NewGuid();
         }
 
+        [JsonConstructor]
         public BacklogItemId(Guid id)
         {
-            _id = id;
+            Id = id;
         }
 
         public override string ToString()
         {
-            return _id.ToString();
+            return Id.ToString();
         }
     }
 }

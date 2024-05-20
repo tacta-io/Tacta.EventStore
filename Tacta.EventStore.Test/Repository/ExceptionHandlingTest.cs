@@ -5,6 +5,8 @@ using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository;
 using Tacta.EventStore.Repository.Exceptions;
 using Tacta.EventStore.Repository.Models;
+using Tacta.EventStore.Test.Domain.AggregateRoots;
+using Tacta.EventStore.Test.Domain.Identities;
 using Tacta.EventStore.Test.Repository.DomainEvents;
 using Xunit;
 
@@ -147,25 +149,44 @@ namespace Tacta.EventStore.Test.Repository
         }
         
         [Fact]
-        public async Task GivenNullEventRecord_WhenCollectionSaveAsync_ShouldThrowInvalidAggregateRecordException()
+        public async Task GivenAnyNullEventRecord_WhenAggregatesSaveAsync_ShouldThrowInvalidEventRecordException()
         {
             // Given
             var @event = new BooCreated("AggregateId", 100M, false);
             AggregateRecord aggregateRecord = new AggregateRecord("AggregateId", "aggregate", 1);
             var eventRecords = new List<EventRecord<IDomainEvent>>
             {
+                new EventRecord<IDomainEvent>(Guid.NewGuid(), DateTime.Now, @event),
                 null
             };
 
-            var aggregate = new Aggregate(aggregateRecord, eventRecords);
+            var aggregates = new List<Aggregate> { new Aggregate(aggregateRecord, eventRecords) };
 
             // When + Then
             await Assert.ThrowsAsync<InvalidEventRecordException>(() =>
-                _eventStoreRepository.SaveAsync(new List<Aggregate> { aggregate }));
+                _eventStoreRepository.SaveAsync(aggregates));
+        }
+
+        [Fact]
+        public async Task GivenNullSqlConnection_WhenAggregatesSaveAsync_ShouldThrowNullReferenceException()
+        {
+            // Given
+            var @event = new BooCreated("AggregateId", 100M, false);
+            var aggregateRecord = new AggregateRecord("AggregateId", "AggregateName", 0);
+            var eventRecords = new List<EventRecord<IDomainEvent>>
+            {
+                new EventRecord<IDomainEvent>(Guid.NewGuid(), DateTime.Now, @event)
+            };
+
+            var aggregates = new List<Aggregate> { new Aggregate(aggregateRecord, eventRecords) };
+
+            // When + Then
+            await Assert.ThrowsAsync<NullReferenceException>(() =>
+                _eventStoreRepository.SaveAsync(aggregates));
         }
         
         [Fact]
-        public async void GivenNullEventRecords_WhenCreatingAggregate_ShouldThrowInvalidEventRecordException()
+        public void GivenNullEventRecords_WhenCreatingAggregate_ShouldThrowInvalidEventRecordException()
         {
             // Given
             var @event = new BooCreated("AggregateId", 100M, false);
@@ -207,6 +228,32 @@ namespace Tacta.EventStore.Test.Repository
             // When + Then
             await Assert.ThrowsAsync<NullReferenceException>(() =>
                 _eventStoreRepository.SaveAsync(aggregateRecord, eventRecords));
+        }
+        
+        [Fact]
+        public async Task GivenNullSqlConnection_WhenAggregateRootSaveAsync_ShouldThrowNullReferenceException()
+        {
+            // Given
+            var backlogItem = BacklogItem.FromSummary(new BacklogItemId(), "summary");
+            backlogItem.AddTask("task");
+
+            // When + Then
+            await Assert.ThrowsAsync<NullReferenceException>(() =>
+                _eventStoreRepository.SaveAsync<IAggregateRoot<IEntityId>>(backlogItem));
+        }
+        
+        [Fact]
+        public async Task GivenNullSqlConnection_WhenAggregateRootsSaveAsync_ShouldThrowNullReferenceException()
+        {
+            // Given
+            var backlogItem = BacklogItem.FromSummary(new BacklogItemId(), "summary");
+            backlogItem.AddTask("task");
+
+            var aggregateRoots = new List<BacklogItem> { backlogItem };
+
+            // When + Then
+            await Assert.ThrowsAsync<NullReferenceException>(() =>
+                _eventStoreRepository.SaveAsync<IAggregateRoot<IEntityId>>(aggregateRoots));
         }
 
         [Fact]
