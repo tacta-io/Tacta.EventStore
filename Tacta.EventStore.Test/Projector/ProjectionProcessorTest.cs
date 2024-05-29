@@ -10,6 +10,7 @@ using Moq;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector;
 using Tacta.EventStore.Repository;
+using Tacta.EventStore.Repository.Models;
 using Tacta.EventStore.Test.Projector.DomainEvents;
 using Tacta.EventStore.Test.Projector.Projections;
 using Tacta.EventStore.Test.Repository;

@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using Dapper;
 using Newtonsoft.Json;
 using Tacta.Connection;
+using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository.Exceptions;
+using Tacta.EventStore.Repository.Models;
 
 namespace Tacta.EventStore.Repository
 {
@@ -73,6 +75,50 @@ namespace Tacta.EventStore.Repository
 
                 throw;
             }
+        }
+
+        public async Task SaveAsync(IReadOnlyCollection<Aggregate> aggregates,
+            CancellationToken cancellationToken = default)
+        {
+            if (aggregates == null || !aggregates.Any()) return;
+            
+            if (aggregates.Any(a => a == null || a.AggregateRecord == null))
+                throw new InvalidAggregateRecordException("No Aggregate record can be null");
+            
+            if (aggregates.Any(a => a.EventRecords == null || a.EventRecords.Any(r => r == null)))
+                throw new InvalidEventRecordException("Event record cannot be null");
+
+            var records = aggregates.SelectMany(aggregate => aggregate.ToStoredEvents(_jsonSerializerSettings));
+
+            try
+            {
+                await _sqlConnectionFactory.ExecuteWithTransactionIfExists(async (connection, transaction) =>
+                {
+                    await connection.ExecuteAsync(StoredEvent.InsertQuery, records, transaction).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                if ((e is System.Data.SqlClient.SqlException || e is Microsoft.Data.SqlClient.SqlException) &&
+                    e.Message.Contains("ConcurrencyCheckIndex"))
+                    throw new ConcurrencyCheckException(e.Message);
+
+                throw;
+            }
+        }
+        
+        public async Task SaveAsync<T>(T aggregateRoot) where T : IAggregateRoot<IEntityId>
+        {
+            var aggregate = new Aggregate(aggregateRoot);
+
+            await SaveAsync(aggregate.AggregateRecord, aggregate.EventRecords).ConfigureAwait(false);
+        }
+        
+        public async Task SaveAsync<T>(IEnumerable<T> aggregateRoots) where T : IAggregateRoot<IEntityId>
+        {
+            var aggregates = aggregateRoots.Select(ar => new Aggregate(ar)).ToList().AsReadOnly();
+
+            await SaveAsync(aggregates).ConfigureAwait(false);
         }
 
         public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string aggregateId, CancellationToken cancellationToken = default)

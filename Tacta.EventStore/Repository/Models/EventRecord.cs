@@ -1,7 +1,7 @@
 ﻿using System;
 using Tacta.EventStore.Repository.Exceptions;
 
-namespace Tacta.EventStore.Repository
+namespace Tacta.EventStore.Repository.Models
 {
     public sealed class EventRecord<T>
     {

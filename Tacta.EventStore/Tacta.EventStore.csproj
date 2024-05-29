@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.6.3</Version>
-    <PackageVersion>1.6.3</PackageVersion>
+    <Version>1.6.4</Version>
+    <PackageVersion>1.6.4</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Updated Tacta.Connection nuget</PackageReleaseNotes>
+    <PackageReleaseNotes>Saving multiple aggregates at once</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>

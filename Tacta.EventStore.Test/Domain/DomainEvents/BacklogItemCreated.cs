@@ -1,4 +1,5 @@
 ﻿using System;
+using Newtonsoft.Json;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Test.Domain.Identities;
 
@@ -15,6 +16,15 @@ namespace Tacta.EventStore.Test.Domain.DomainEvents
             CreatedAt = DateTime.Now;
             Summary = summary;
             BacklogItemId = backlogItemId;
+        }
+
+        [JsonConstructor]
+        public BacklogItemCreated(Guid id, string aggregateId, DateTime createdAt, BacklogItemId backlogItemId,
+            string summary)
+            : base(id, aggregateId, createdAt)
+        {
+            BacklogItemId = backlogItemId;
+            Summary = summary;
         }
     }
 }
