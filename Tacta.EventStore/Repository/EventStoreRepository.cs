@@ -131,6 +131,20 @@ namespace Tacta.EventStore.Repository
             return await GetAsync<T>(StoredEvent.SelectQuery, param, cancellationToken).ConfigureAwait(false);
         }
 
+        public async Task<TA> GetAsync<T, TA>(string aggregateId, CancellationToken cancellationToken = default) where T : DomainEvent where TA : class, IAggregateRoot<IEntityId>
+        {
+            if (string.IsNullOrWhiteSpace(aggregateId))
+                throw new InvalidAggregateIdException("Aggregate Id cannot be null or white space");
+
+            var param = new { AggregateId = aggregateId };
+
+            var records = await GetAsync<T>(StoredEvent.SelectQuery, param, cancellationToken).ConfigureAwait(false);
+            records.ToList().ForEach(x => x.Event.WithVersionAndSequence(x.Version, x.Sequence));
+            var domainEvents = records.Select(x => x.Event).ToList().AsReadOnly();
+
+            return domainEvents.Any() ? (TA)Activator.CreateInstance(typeof(TA), domainEvents) : null;
+        }
+
         public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetFromSequenceAsync<T>(long sequence,
             int? take = null, CancellationToken cancellationToken = default)
         {

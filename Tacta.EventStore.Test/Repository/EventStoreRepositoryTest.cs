@@ -23,7 +23,6 @@ namespace Tacta.EventStore.Test.Repository
             _eventStoreRepository = new EventStoreRepository(ConnectionFactory);
         }
 
-
         [Fact]
         public async Task InsertAsync_GetAsync_SingleAggregate()
         {
@@ -47,6 +46,32 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Equal(booCreated.GetType(), results.Single(x => x.AggregateId == booId).Event.GetType());
             Assert.Equal(booCreated.CreatedAt.ToShortTimeString(), results.Single(x => x.AggregateId == booId).CreatedAt.ToShortTimeString());
             Assert.Equal(booCreated.Id, results.Single(x => x.AggregateId == booId).Id);
+        }
+
+        [Fact]
+        public async Task InsertAsync_GetAsync_SingleAggregate_WhenGetAsAggregate()
+        {
+            // Given
+            var aggregateId = new BacklogItemId();
+            var summary = "summary";
+            var aggregate = BacklogItem.FromSummary(aggregateId, summary);
+            var taskTitle = "task-title";
+            aggregate.AddTask(taskTitle);
+
+            // When
+            var aggregateRecord = new AggregateRecord(aggregate.Id.ToString(), aggregate.GetType().Name, aggregate.Version);
+            var eventRecords = aggregate.DomainEvents.Select(@event => 
+                new EventRecord<IDomainEvent>(((DomainEvent)@event).Id, @event.CreatedAt, @event)).ToList().AsReadOnly();
+
+            await _eventStoreRepository.SaveAsync(aggregateRecord, eventRecords).ConfigureAwait(false);
+
+            // Then
+            var result = await _eventStoreRepository.GetAsync<DomainEvent, BacklogItem>(aggregateId.ToString()).ConfigureAwait(false);
+
+            Assert.NotNull(result);
+            Assert.Equal(summary, result.Summary);
+            Assert.Single(result.SubTasks);
+            Assert.Equal(taskTitle, result.SubTasks.Single().Title);
         }
         
         [Fact]
@@ -141,6 +166,37 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Equal(booCreated.CreatedAt.ToShortTimeString(),
                 results.Single(x => x.AggregateId == booId).CreatedAt.ToShortTimeString());
             Assert.Equal(booCreated.Id, results.Single(x => x.AggregateId == booId).Id);
+        }
+        
+        [Fact]
+        public async Task PassTransaction_InsertAsync_GetAsync_GetAsAggregate()
+        {
+            using var connection = ConnectionFactory.Connection();
+            connection.Open();
+            var transaction = connection.BeginTransaction();
+            
+            // Given
+            var aggregateId = new BacklogItemId();
+            var summary = "summary";
+            var aggregate = BacklogItem.FromSummary(aggregateId, summary);
+            var taskTitle = "task-title";
+            aggregate.AddTask(taskTitle);
+
+            // When
+            var aggregateRecord = new AggregateRecord(aggregate.Id.ToString(), aggregate.GetType().Name, aggregate.Version);
+            var eventRecords = aggregate.DomainEvents.Select(@event => 
+                new EventRecord<IDomainEvent>(((DomainEvent)@event).Id, @event.CreatedAt, @event)).ToList().AsReadOnly();
+
+            await _eventStoreRepository.SaveAsync(aggregateRecord, eventRecords).ConfigureAwait(false);
+            transaction.Commit();
+            
+            // Then
+            var result = await _eventStoreRepository.GetAsync<DomainEvent, BacklogItem>(aggregateId.ToString()).ConfigureAwait(false);
+
+            Assert.NotNull(result);
+            Assert.Equal(summary, result.Summary);
+            Assert.Single(result.SubTasks);
+            Assert.Equal(taskTitle, result.SubTasks.Single().Title);
         }
         
         [Fact]
@@ -472,6 +528,24 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Equal(1, results.First().Version);
             Assert.Equal(1, results.First().Sequence);
         }
+        
+        [Fact]
+        public async Task PropertiesCheck_WhenGetAsAggregate()
+        {
+            // Given
+            var aggregateId = new BacklogItemId();
+            var summary = "summary";
+            var aggregate = BacklogItem.FromSummary(aggregateId, summary);
+
+            await _eventStoreRepository.SaveAsync(aggregate).ConfigureAwait(false);
+
+            // When
+            var result = await _eventStoreRepository.GetAsync<DomainEvent, BacklogItem>(aggregateId.ToString()).ConfigureAwait(false);
+
+            // Then
+            Assert.Equal(summary, result.Summary);
+            Assert.Equal(1, result.Version);
+        }
 
         [Fact]
         public async Task ConcurrencyCheck()
@@ -611,7 +685,7 @@ namespace Tacta.EventStore.Test.Repository
             // Then
             Assert.Equal(2, eventStoreRecords.Count);
         }
-        
+
         [Fact]
         public async Task GetUntilSequence_WithSavedAsAggregateRoot_ShouldReturnAllAggregateEventStoreRecords()
         {
