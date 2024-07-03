@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Tacta.EventStore.DependencyInjection;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository;
 using Tacta.EventStore.Repository.Exceptions;
@@ -20,7 +21,15 @@ namespace Tacta.EventStore.Test.Repository
 
         public EventStoreRepositoryTest()
         {
-            _eventStoreRepository = new EventStoreRepository(ConnectionFactory);
+            var eventNameConverter = new EventNameToTypeConverter(new Dictionary<string, Type>
+            {
+                {nameof(BacklogItemCreated), typeof(BacklogItemCreated)},
+                {nameof(SubTaskAdded), typeof(SubTaskAdded)},
+                {nameof(FooRegistered), typeof(FooRegistered)},
+                {nameof(BooCreated), typeof(BooCreated)},
+                {nameof(BooActivated), typeof(BooActivated)}
+            });
+            _eventStoreRepository = new EventStoreRepository(ConnectionFactory, eventNameConverter);
         }
 
 

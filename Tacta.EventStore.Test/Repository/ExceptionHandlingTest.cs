@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Tacta.EventStore.DependencyInjection;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository;
 using Tacta.EventStore.Repository.Exceptions;
@@ -18,7 +19,7 @@ namespace Tacta.EventStore.Test.Repository
 
         public ExceptionHandlingTest()
         {
-            _eventStoreRepository = new EventStoreRepository(null);
+            _eventStoreRepository = new EventStoreRepository(null, (IEventNameToTypeConverter)null);
         }
 
         [Fact]

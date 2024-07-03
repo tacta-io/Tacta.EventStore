@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Dapper;
 using Newtonsoft.Json;
 using Tacta.Connection;
+using Tacta.EventStore.DependencyInjection;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository.Exceptions;
 using Tacta.EventStore.Repository.Models;
@@ -15,17 +16,19 @@ namespace Tacta.EventStore.Repository
     public sealed class EventStoreRepository : IEventStoreRepository
     {
         private readonly IConnectionFactory _sqlConnectionFactory;
+        private readonly IEventNameToTypeConverter _nameToTypeConverter;
 
         private readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
         {
-            TypeNameHandling = TypeNameHandling.All,
+            TypeNameHandling = TypeNameHandling.None,
             NullValueHandling = NullValueHandling.Ignore,
             MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead
         };
 
-        public EventStoreRepository(IConnectionFactory connectionFactory)
+        public EventStoreRepository(IConnectionFactory connectionFactory, IEventNameToTypeConverter nameToTypeConverter)
         {
             _sqlConnectionFactory = connectionFactory;
+            _nameToTypeConverter = nameToTypeConverter;
         }
 
         public EventStoreRepository(IConnectionFactory connectionFactory,
@@ -192,10 +195,10 @@ namespace Tacta.EventStore.Repository
                      .ToList().AsReadOnly();
 
                 if (!storedEvents.Any()) return new List<EventStoreRecord<T>>();
-
+                
                 return storedEvents.Select(@event => new EventStoreRecord<T>
                 {
-                    Event = JsonConvert.DeserializeObject<T>(@event.Payload, _jsonSerializerSettings),
+                    Event = (T)JsonConvert.DeserializeObject(@event.Payload, _nameToTypeConverter.GetType(@event.Name)),
                     AggregateId = @event.AggregateId,
                     CreatedAt = @event.CreatedAt,
                     Id = @event.Id,
