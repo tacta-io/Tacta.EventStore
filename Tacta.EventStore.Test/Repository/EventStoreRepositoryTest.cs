@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Tacta.EventStore.DependencyInjection;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository;
@@ -56,6 +57,105 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Equal(booCreated.GetType(), results.Single(x => x.AggregateId == booId).Event.GetType());
             Assert.Equal(booCreated.CreatedAt.ToShortTimeString(), results.Single(x => x.AggregateId == booId).CreatedAt.ToShortTimeString());
             Assert.Equal(booCreated.Id, results.Single(x => x.AggregateId == booId).Id);
+        }
+        
+        [Fact]
+        public async Task InsertAsync_OldSerialization_GetAsync_CorrectDeserialization()
+        {
+            // Given
+            const string booId = "001";
+            var booCreated = new BooCreated(booId, 100M, false);
+            var booActivated = new BooActivated(booId);
+            var jsonSerializerSettings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.All,
+                NullValueHandling = NullValueHandling.Ignore,
+                MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead
+            };
+            var eventNameConverter = new EventNameToTypeConverter(new Dictionary<string, Type>
+            {
+                {nameof(BacklogItemCreated), typeof(BacklogItemCreated)},
+                {nameof(SubTaskAdded), typeof(SubTaskAdded)},
+                {nameof(FooRegistered), typeof(FooRegistered)},
+                {nameof(BooCreated), typeof(BooCreated)},
+                {nameof(BooActivated), typeof(BooActivated)}
+            });
+            var eventStoreRepository = new EventStoreRepository(ConnectionFactory, eventNameConverter,
+                jsonSerializerSettings);
+
+            var aggregateRecord = new AggregateRecord(booId, "Boo", 0);
+            var eventRecords = new List<EventRecord<DomainEvent>>
+            {
+                new EventRecord<DomainEvent>(booCreated.Id, booCreated.CreatedAt, booCreated),
+                new EventRecord<DomainEvent>(booActivated.Id, booActivated.CreatedAt, booActivated)
+            };
+            // When
+            await eventStoreRepository.SaveAsync(aggregateRecord, eventRecords).ConfigureAwait(false);
+
+            // Then
+            var results = await eventStoreRepository.GetAsync<DomainEvent>(booId).ConfigureAwait(false);
+
+            Assert.Equal(2, results.Count);
+            Assert.Contains(
+                results.Select(x => x.Event.GetType()).ToList(), 
+                type => type == booCreated.GetType());
+            Assert.Contains(
+                results.Select(x => x.Event.GetType()).ToList(), 
+                type => type == booActivated.GetType());
+
+            var resultBooCreated = results.First(x => x.Event.GetType() == booCreated.GetType());
+            var resultBooActivated = results.First(x => x.Event.GetType() == booActivated.GetType());
+            Assert.Equal(booCreated.CreatedAt.ToShortTimeString(), resultBooCreated.CreatedAt.ToShortTimeString());
+            Assert.Equal(booActivated.CreatedAt.ToShortTimeString(), resultBooActivated.CreatedAt.ToShortTimeString());
+            Assert.Equal(booCreated.Id, resultBooCreated.Id);
+            Assert.Equal(booActivated.Id, resultBooActivated.Id);
+        }
+        
+                [Fact]
+        public async Task InsertAsync_Aggregate_OldSerialization_GetAsync_CorrectDeserialization()
+        {
+            // Given
+            var jsonSerializerSettings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.All,
+                NullValueHandling = NullValueHandling.Ignore,
+                MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead
+            };
+            var eventNameConverter = new EventNameToTypeConverter(new Dictionary<string, Type>
+            {
+                {nameof(BacklogItemCreated), typeof(BacklogItemCreated)},
+                {nameof(SubTaskAdded), typeof(SubTaskAdded)},
+                {nameof(FooRegistered), typeof(FooRegistered)},
+                {nameof(BooCreated), typeof(BooCreated)},
+                {nameof(BooActivated), typeof(BooActivated)}
+            });
+            var eventStoreRepository = new EventStoreRepository(ConnectionFactory, eventNameConverter,
+                jsonSerializerSettings);
+
+            var aggregateId = new BacklogItemId();
+            var summary = "summary";
+            var aggregate = BacklogItem.FromSummary(aggregateId, summary);
+            var taskTitle = "task-title";
+            aggregate.AddTask(taskTitle);
+            
+            // When
+            await eventStoreRepository.SaveAsync(aggregate).ConfigureAwait(false);
+
+            // Then
+            var results = await eventStoreRepository.GetAsync<DomainEvent>(aggregateId.ToString()).ConfigureAwait(false);
+
+            Assert.Equal(2, results.Count);
+            Assert.Contains(
+                results.Select(x => x.Event.GetType()).ToList(), 
+                type => type == typeof(BacklogItemCreated));
+            Assert.Contains(
+                results.Select(x => x.Event.GetType()).ToList(), 
+                type => type == typeof(SubTaskAdded));
+
+            var backlogItemCreated = (BacklogItemCreated) results.First(x => x.Event is BacklogItemCreated).Event;
+            var subTaskAdded = (SubTaskAdded) results.First(x => x.Event is SubTaskAdded).Event;
+            Assert.Equal(summary, backlogItemCreated.Summary);
+            Assert.Equal(taskTitle, subTaskAdded.Title);
         }
         
         [Fact]

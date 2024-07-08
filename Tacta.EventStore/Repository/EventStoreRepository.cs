@@ -31,10 +31,12 @@ namespace Tacta.EventStore.Repository
             _nameToTypeConverter = nameToTypeConverter;
         }
 
-        public EventStoreRepository(IConnectionFactory connectionFactory,
+        internal EventStoreRepository(IConnectionFactory connectionFactory,
+            IEventNameToTypeConverter nameToTypeConverter,
             JsonSerializerSettings jsonSerializerSettings)
         {
             _sqlConnectionFactory = connectionFactory;
+            _nameToTypeConverter = nameToTypeConverter;
             _jsonSerializerSettings = jsonSerializerSettings;
         }
 
