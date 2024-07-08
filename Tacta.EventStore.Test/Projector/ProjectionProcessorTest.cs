@@ -3,16 +3,14 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
+using Tacta.EventStore.DependencyInjection;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector;
 using Tacta.EventStore.Repository;
 using Tacta.EventStore.Repository.Models;
-using Tacta.EventStore.Test.Projector.DomainEvents;
-using Tacta.EventStore.Test.Projector.Projections;
 using Tacta.EventStore.Test.Repository;
 using Tacta.EventStore.Test.Repository.DomainEvents;
 using Xunit;
@@ -33,7 +31,13 @@ namespace Tacta.EventStore.Test.Projector
         public ProjectionProcessorTest()
         {
             _projectionMock = new Mock<IProjection>();
-            _eventStoreRepository = new EventStoreRepository(ConnectionFactory);
+            var domainEvents = new Dictionary<string, Type>
+            {
+                {nameof(FooRegistered), typeof(FooRegistered)},
+                {nameof(BooCreated), typeof(BooCreated)},
+                {nameof(BooActivated), typeof(BooActivated)}
+            };
+            _eventStoreRepository = new EventStoreRepository(ConnectionFactory, new EventNameToTypeConverter(domainEvents));
         }
         
         [Fact]

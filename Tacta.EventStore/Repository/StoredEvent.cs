@@ -19,29 +19,29 @@ namespace Tacta.EventStore.Repository
                     VALUES (@Id, @Name, @AggregateId, @Aggregate, @Version, @CreatedAt, @Payload);";
 
         public static string SelectQuery =
-            @"SELECT [Id], [AggregateId], [Version], [CreatedAt], [Payload], [Sequence] 
+            @"SELECT [Id], [Name], [AggregateId], [Version], [CreatedAt], [Payload], [Sequence] 
                 FROM [dbo].[EventStore] WHERE [AggregateId] = @AggregateId";
 
         public static string SelectChunkedWithoutLimitQuery =
-            @"SELECT [Id], [AggregateId], [Version], [CreatedAt], [Payload], [Sequence] 
+            @"SELECT [Id], [Name], [AggregateId], [Version], [CreatedAt], [Payload], [Sequence] 
                 FROM [dbo].[EventStore] 
                 WHERE [Sequence] > @Sequence
                 ORDER BY [Sequence]";
 
         public static string SelectChunkedWithLimitQuery =
-            @"SELECT TOP (@Take) [Id], [AggregateId], [Version], [CreatedAt], [Payload], [Sequence] 
+            @"SELECT TOP (@Take) [Id], [Name], [AggregateId], [Version], [CreatedAt], [Payload], [Sequence] 
                 FROM [dbo].[EventStore] 
                 WHERE [Sequence] > @Sequence
                 ORDER BY [Sequence]";
 
         public static string SelectUntilEventQuery =
-            @"SELECT [Id], [AggregateId], [Version], [CreatedAt], [Payload], [Sequence] 
+            @"SELECT [Id], [Name], [AggregateId], [Version], [CreatedAt], [Payload], [Sequence] 
                 FROM [dbo].[EventStore] 
                 WHERE [AggregateId] = @AggregateId AND [Sequence] <= (SELECT TOP 1 [Sequence] FROM [dbo].[EventStore] WHERE [Id] = @EventId)
                 ORDER BY [Sequence]";
 
         public static string SelectUntilSequenceQuery =
-            @"SELECT [Id], [AggregateId], [Version], [CreatedAt], [Payload], [Sequence] 
+            @"SELECT [Id], [Name], [AggregateId], [Version], [CreatedAt], [Payload], [Sequence] 
                 FROM [dbo].[EventStore] 
                 WHERE [AggregateId] = @AggregateId AND [Sequence] <= @Sequence
                 ORDER BY [Sequence]";

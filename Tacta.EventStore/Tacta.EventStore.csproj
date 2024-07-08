@@ -12,10 +12,11 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.6.4</Version>
-    <PackageVersion>1.6.4</PackageVersion>
+    <Version>1.6.5</Version>
+    <PackageVersion>1.6.5</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Saving multiple aggregates at once</PackageReleaseNotes>
+    <PackageReleaseNotes>Serializing and deserializing events by their name instead of full type information saved in 
+      EventStore payload</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
@@ -24,6 +25,7 @@
     <PackageReference Include="Dapper" Version="2.0.143" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Polly" Version="7.2.4" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
