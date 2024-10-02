@@ -69,12 +69,12 @@ namespace Tacta.EventStore.Projector
 
                         Parallel.ForEach(_projections,
                             options,
-                            projection => { projection.Apply(events).ConfigureAwait(false).GetAwaiter().GetResult(); });
+                            projection => { projection.Apply<T>(events).ConfigureAwait(false).GetAwaiter().GetResult(); });
                     }
                     else
                     {
                         foreach (var projection in _projections)
-                            await projection.Apply(events).ConfigureAwait(false);
+                            await projection.Apply<T>(events).ConfigureAwait(false);
                     }
 
                     processed = events.Count;
@@ -147,15 +147,14 @@ namespace Tacta.EventStore.Projector
             _isInitialized = true;
         }
 
-        private async Task<IReadOnlyCollection<IDomainEvent>> Load<T>(int take) where T : IDomainEvent
+        private async Task<IReadOnlyCollection<EventStoreRecord<T>>> Load<T>(int take) where T : IDomainEvent
         {
             var eventStoreRecords = await _eventStoreRepository
                 .GetFromSequenceAsync<T>(_pivot, take)
                 .ConfigureAwait(false);
 
-            eventStoreRecords.ToList().ForEach(x => x.Event.WithVersionAndSequence(x.Version, x.Sequence));
-
-            return eventStoreRecords.Select(x => (IDomainEvent)x.Event).ToList().AsReadOnly();
+            return eventStoreRecords;
+            // return eventStoreRecords.Select(x => (IDomainEvent)x.Event).ToList().AsReadOnly();
         }
     }
 }

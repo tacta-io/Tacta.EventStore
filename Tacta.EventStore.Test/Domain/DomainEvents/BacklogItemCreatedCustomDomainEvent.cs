@@ -20,10 +20,12 @@ namespace Tacta.EventStore.Test.Domain.DomainEvents
         public BacklogItemCreatedCustomDomainEvent(
             Guid id, 
             DateTime createdAt,
+            int version,
+            long sequence,
             string customDomainEventProperty,
             BacklogItemId backlogItemId,
             string summary
-            ) : base(id, createdAt, customDomainEventProperty)
+            ) : base(id, createdAt, customDomainEventProperty, version, sequence)
         {
             BacklogItemId = backlogItemId;
             Summary = summary;

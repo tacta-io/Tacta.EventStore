@@ -4,6 +4,11 @@ namespace Tacta.EventStore.Test.Projector.DomainEvents
 {
     public sealed class UserVerified : DomainEvent
     {
-        public UserVerified(string aggregateId) : base(aggregateId) { }
+        public long Sequence { get; }
+
+        public UserVerified(string aggregateId, long sequence) : base(aggregateId)
+        {
+            Sequence = sequence;
+        }
     }
 }

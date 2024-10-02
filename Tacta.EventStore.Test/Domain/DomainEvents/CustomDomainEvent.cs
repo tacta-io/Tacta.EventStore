@@ -22,14 +22,9 @@ namespace Tacta.EventStore.Test.Domain.DomainEvents
         }
 
         [JsonConstructor]
-        public CustomDomainEvent(Guid id, DateTime createdAt, string customDomainEventProperty)
+        public CustomDomainEvent(Guid id, DateTime createdAt, string customDomainEventProperty, int version, long sequence)
         {
-            (Id, CreatedAt, CustomDomainEventProperty) = (id, createdAt, customDomainEventProperty);
-        }
-
-        public void WithVersionAndSequence(int version, long sequence)
-        {
-            (Version, Sequence) = (version, sequence);
+            (Id, CreatedAt, CustomDomainEventProperty, Version, Sequence) = (id, createdAt, customDomainEventProperty, version, sequence);
         }
     }
 }

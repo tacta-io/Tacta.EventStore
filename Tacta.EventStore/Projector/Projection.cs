@@ -17,21 +17,19 @@ namespace Tacta.EventStore.Projector
             _projectionRepository = projectionRepository;
         }
 
-        public async Task Apply(IReadOnlyCollection<IDomainEvent> events)
+        public async Task Apply<T>(IReadOnlyCollection<EventStoreRecord<T>> records)
         {
-            foreach (var @event in events.OrderBy(x => x.Sequence))
+            foreach (var record in records.OrderBy(x => x.Sequence))
             {
-                if (@event.Sequence <= _sequence) continue;
+                if (record.Sequence <= _sequence) continue;
 
-                await ((dynamic)this).On((dynamic)@event);
+                await ((dynamic)this).On((dynamic)record.Event);
 
-                _sequence = @event.Sequence;
+                _sequence = record.Sequence;
             }
         }
 
         public async Task Initialize() => _sequence = await _projectionRepository.GetSequenceAsync().ConfigureAwait(false);
-
-        public async Task On(IDomainEvent @event) => await Task.FromResult(_sequence = @event.Sequence).ConfigureAwait(false);
 
         public long GetSequence() => _sequence;
         
