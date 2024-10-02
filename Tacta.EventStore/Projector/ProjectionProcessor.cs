@@ -154,7 +154,6 @@ namespace Tacta.EventStore.Projector
                 .ConfigureAwait(false);
 
             return eventStoreRecords;
-            // return eventStoreRecords.Select(x => (IDomainEvent)x.Event).ToList().AsReadOnly();
         }
     }
 }

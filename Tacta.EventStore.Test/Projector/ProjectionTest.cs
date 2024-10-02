@@ -68,8 +68,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userRegistered.CreatedAt,
                         Event = userRegistered,
                         Id = Guid.NewGuid(),
-                        // Sequence = userRegistered.Sequence,
-                        // Version = userRegistered.Version
+                        Sequence = 120,
+                        Version = 0
                     }
                 });
 
@@ -165,8 +165,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userRegistered.CreatedAt,
                         Event = userRegistered,
                         Id = Guid.NewGuid(),
-                        // Sequence = userRegistered.Sequence,
-                        // Version = userRegistered.Version
+                        Sequence = 120,
+                        Version = 0
                     },
                     new EventStoreRecord<DomainEvent>
                     {
@@ -174,8 +174,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userBanned.CreatedAt,
                         Event = userBanned,
                         Id = Guid.NewGuid(),
-                        // Sequence = userBanned.Sequence,
-                        // Version = userBanned.Version
+                        Sequence = 345,
+                        Version = 1
                     }
                 });
 
