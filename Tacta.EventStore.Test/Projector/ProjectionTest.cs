@@ -28,8 +28,7 @@ namespace Tacta.EventStore.Test.Projector
         public async Task OnUserRegistered()
         {
             // Given
-            var userRegistered = new UserRegistered("userId", "John Doe", false);
-            userRegistered.WithVersionAndSequence(1, 120);
+            var userRegistered = new UserRegistered("userId", "John Doe", false, 120);
 
             _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100, CancellationToken.None))
                 .ReturnsAsync(new List<EventStoreRecord<DomainEvent>>
@@ -40,8 +39,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userRegistered.CreatedAt,
                         Event = userRegistered,
                         Id = Guid.NewGuid(),
-                        Sequence = userRegistered.Sequence,
-                        Version = userRegistered.Version
+                        Sequence = 120,
+                        Version = 1
                     }
                 });
 
@@ -58,8 +57,7 @@ namespace Tacta.EventStore.Test.Projector
         public async Task NoProjectionsAdded_ReturnsZero()
         {
             // Given
-            var userRegistered = new UserRegistered("userId", "John Doe", false);
-            userRegistered.WithVersionAndSequence(1, 120);
+            var userRegistered = new UserRegistered("userId", "John Doe", false, 120);
 
             _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100, CancellationToken.None))
                 .ReturnsAsync(new List<EventStoreRecord<DomainEvent>>
@@ -70,8 +68,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userRegistered.CreatedAt,
                         Event = userRegistered,
                         Id = Guid.NewGuid(),
-                        Sequence = userRegistered.Sequence,
-                        Version = userRegistered.Version
+                        Sequence = 120,
+                        Version = 0
                     }
                 });
 
@@ -89,11 +87,9 @@ namespace Tacta.EventStore.Test.Projector
         public async Task OnUserBanned()
         {
             // Given
-            var userRegistered = new UserRegistered("userId", "John Doe", false);
-            userRegistered.WithVersionAndSequence(1, 120);
+            var userRegistered = new UserRegistered("userId", "John Doe", false, 120);
 
-            var userBanned = new UserBanned("userId");
-            userRegistered.WithVersionAndSequence(2, 345);
+            var userBanned = new UserBanned("userId", 345);
 
             _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100, CancellationToken.None))
                 .ReturnsAsync(new List<EventStoreRecord<DomainEvent>>
@@ -104,8 +100,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userRegistered.CreatedAt,
                         Event = userRegistered,
                         Id = Guid.NewGuid(),
-                        Sequence = userRegistered.Sequence,
-                        Version = userRegistered.Version
+                        Sequence = 120,
+                        Version = 1
                     },
                     new EventStoreRecord<DomainEvent>
                     {
@@ -113,8 +109,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userBanned.CreatedAt,
                         Event = userBanned,
                         Id = Guid.NewGuid(),
-                        Sequence = userBanned.Sequence,
-                        Version = userBanned.Version
+                        Sequence = 345,
+                        Version = 2
                     }
                 });
 
@@ -156,11 +152,9 @@ namespace Tacta.EventStore.Test.Projector
         public async Task OnRebuildAndProcess()
         {
             // Given
-            var userRegistered = new UserRegistered("userId", "John Doe", false);
-            userRegistered.WithVersionAndSequence(1, 120);
+            var userRegistered = new UserRegistered("userId", "John Doe", false, 120);
 
-            var userBanned = new UserBanned("userId");
-            userRegistered.WithVersionAndSequence(2, 345);
+            var userBanned = new UserBanned("userId", 345);
 
             _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100, CancellationToken.None))
                 .ReturnsAsync(new List<EventStoreRecord<DomainEvent>>
@@ -171,8 +165,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userRegistered.CreatedAt,
                         Event = userRegistered,
                         Id = Guid.NewGuid(),
-                        Sequence = userRegistered.Sequence,
-                        Version = userRegistered.Version
+                        Sequence = 120,
+                        Version = 0
                     },
                     new EventStoreRecord<DomainEvent>
                     {
@@ -180,8 +174,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userBanned.CreatedAt,
                         Event = userBanned,
                         Id = Guid.NewGuid(),
-                        Sequence = userBanned.Sequence,
-                        Version = userBanned.Version
+                        Sequence = 345,
+                        Version = 1
                     }
                 });
 
@@ -209,11 +203,9 @@ namespace Tacta.EventStore.Test.Projector
         public async Task OnNormalRebuildFlow()
         {
             // Given
-            var userRegistered = new UserRegistered("userId", "John Doe", false);
-            userRegistered.WithVersionAndSequence(1, 120);
+            var userRegistered = new UserRegistered("userId", "John Doe", false, 120);
 
-            var userBanned = new UserBanned("userId");
-            userRegistered.WithVersionAndSequence(2, 345);
+            var userBanned = new UserBanned("userId", 345);
 
             _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100, CancellationToken.None))
                 .ReturnsAsync(new List<EventStoreRecord<DomainEvent>>
@@ -224,8 +216,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userRegistered.CreatedAt,
                         Event = userRegistered,
                         Id = Guid.NewGuid(),
-                        Sequence = userRegistered.Sequence,
-                        Version = userRegistered.Version
+                        Sequence = 120,
+                        Version = 1
                     },
                     new EventStoreRecord<DomainEvent>
                     {
@@ -233,8 +225,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userBanned.CreatedAt,
                         Event = userBanned,
                         Id = Guid.NewGuid(),
-                        Sequence = userBanned.Sequence,
-                        Version = userBanned.Version
+                        Sequence = 345,
+                        Version = 2
                     }
                 });
 

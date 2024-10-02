@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Test.Domain.Identities;

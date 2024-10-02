@@ -49,7 +49,7 @@ namespace Tacta.EventStore.Projector
             return content;
         }
 
-        public async Task<int> Process(int take = 100, bool processParallel = false)
+        public async Task<int> Process<T>(int take = 100, bool processParallel = false) where T : IDomainEvent
         {
             var processed = 0;
             
@@ -61,7 +61,7 @@ namespace Tacta.EventStore.Projector
                 await _processingSemaphore.WaitAsync().ConfigureAwait(false);
                 try
                 {
-                    var events = await Load(take).ConfigureAwait(false);
+                    var events = await Load<T>(take).ConfigureAwait(false);
                     
                     if (processParallel)
                     {
@@ -69,12 +69,12 @@ namespace Tacta.EventStore.Projector
 
                         Parallel.ForEach(_projections,
                             options,
-                            projection => { projection.Apply(events).ConfigureAwait(false).GetAwaiter().GetResult(); });
+                            projection => { projection.Apply<T>(events).ConfigureAwait(false).GetAwaiter().GetResult(); });
                     }
                     else
                     {
                         foreach (var projection in _projections)
-                            await projection.Apply(events).ConfigureAwait(false);
+                            await projection.Apply<T>(events).ConfigureAwait(false);
                     }
 
                     processed = events.Count;
@@ -94,6 +94,15 @@ namespace Tacta.EventStore.Projector
             });
 
             return processed;
+        }
+
+        /// <summary>
+        /// Loads events from Event Store as <see cref="DomainEvent"/>
+        /// For custom domain events use <see cref="ProjectionProcessor.Process{T}(int, bool)"/>
+        /// </summary>
+        public async Task<int> Process(int take = 100, bool processParallel = false)
+        {
+            return await Process<DomainEvent>(take, processParallel);
         }
 
         public async Task Rebuild(IEnumerable<Type> projectionTypes = null)
@@ -138,14 +147,13 @@ namespace Tacta.EventStore.Projector
             _isInitialized = true;
         }
 
-        private async Task<IReadOnlyCollection<IDomainEvent>> Load(int take)
+        private async Task<IReadOnlyCollection<EventStoreRecord<T>>> Load<T>(int take) where T : IDomainEvent
         {
             var eventStoreRecords = await _eventStoreRepository
-                .GetFromSequenceAsync<DomainEvent>(_pivot, take).ConfigureAwait(false);
+                .GetFromSequenceAsync<T>(_pivot, take)
+                .ConfigureAwait(false);
 
-            eventStoreRecords.ToList().ForEach(x => x.Event.WithVersionAndSequence(x.Version, x.Sequence));
-
-            return eventStoreRecords.Select(x => x.Event).ToList().AsReadOnly();
+            return eventStoreRecords;
         }
     }
 }

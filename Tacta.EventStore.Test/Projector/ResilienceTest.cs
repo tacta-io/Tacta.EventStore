@@ -108,14 +108,11 @@ namespace Tacta.EventStore.Test.Projector
         {
             _eventStoreRepository = new Mock<IEventStoreRepository>();
 
-            var userRegistered = new UserRegistered("User_123", "John Doe", false);
-            userRegistered.WithVersionAndSequence(1, 841);
+            var userRegistered = new UserRegistered("User_123", "John Doe", false, 841);
 
-            var userVerified = new UserVerified("User_123");
-            userVerified.WithVersionAndSequence(2, 842);
+            var userVerified = new UserVerified("User_123", 842);
 
-            var userBanned = new UserBanned("User_123");
-            userBanned.WithVersionAndSequence(3, 843);
+            var userBanned = new UserBanned("User_123", 843);
 
             _eventStoreRepository.Setup(x => x.GetFromSequenceAsync<DomainEvent>(0, 100, CancellationToken.None))
                 .ReturnsAsync(new List<EventStoreRecord<DomainEvent>>
@@ -126,8 +123,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userRegistered.CreatedAt,
                         Event = userRegistered,
                         Id = userRegistered.Id,
-                        Sequence = userRegistered.Sequence,
-                        Version = userRegistered.Version
+                        Sequence = 841,
+                        Version = 1
                     },
                     new EventStoreRecord<DomainEvent>
                     {
@@ -135,8 +132,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userVerified.CreatedAt,
                         Event = userVerified,
                         Id = userVerified.Id,
-                        Sequence = userVerified.Sequence,
-                        Version = userVerified.Version
+                        Sequence = 842,
+                        Version = 2
                     },
                     new EventStoreRecord<DomainEvent>
                     {
@@ -144,8 +141,8 @@ namespace Tacta.EventStore.Test.Projector
                         CreatedAt = userBanned.CreatedAt,
                         Event = userBanned,
                         Id = userBanned.Id,
-                        Sequence = userBanned.Sequence,
-                        Version = userBanned.Version
+                        Sequence = 843,
+                        Version = 3
                     }
                 });
         }

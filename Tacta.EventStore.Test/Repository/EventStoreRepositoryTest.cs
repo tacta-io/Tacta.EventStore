@@ -23,7 +23,6 @@ namespace Tacta.EventStore.Test.Repository
             _eventStoreRepository = new EventStoreRepository(ConnectionFactory);
         }
 
-
         [Fact]
         public async Task InsertAsync_GetAsync_SingleAggregate()
         {
@@ -165,7 +164,7 @@ namespace Tacta.EventStore.Test.Repository
             var aggregate1 = new Aggregate(aggregateRecordBoo1, eventRecordsBoo1);
 
 
-            var aggregateRecordBoo2 = new AggregateRecord(booId2, "Boo", 1);
+            var aggregateRecordBoo2 = new AggregateRecord(booId2, "Boo", 0);
             var eventRecordsBoo2 = new List<EventRecord<IDomainEvent>>
             {
                 new EventRecord<IDomainEvent>(booCreated2.Id, booCreated2.CreatedAt, booCreated2)
