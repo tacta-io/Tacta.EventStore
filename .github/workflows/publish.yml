@@ -16,9 +16,6 @@ jobs:
       with:
         dotnet-version: ${{ vars.DOTNET_VERSION }}
         
-    - name: Disable globalization support because of Ubuntu build machine
-      run: export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
-
     - name: Build sln to generate nupkg
       run: dotnet build
 
