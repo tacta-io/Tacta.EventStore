@@ -15,7 +15,6 @@ namespace Tacta.EventStore.Domain
 
         public DateTime CreatedAt { get; set; }
 
-       
         protected DomainEvent(string aggregateId)
         {
             (Id, AggregateId, CreatedAt, Version, Sequence) = (Guid.NewGuid(), aggregateId, DateTime.Now, 0, 0);
@@ -27,7 +26,7 @@ namespace Tacta.EventStore.Domain
             (Id, AggregateId, CreatedAt) = (id, aggregateId, createdAt);
         }
 
-        public void WithVersionAndSequence(int version, long sequence)
+        public virtual void WithVersionAndSequence(int version, long sequence)
         {
             (Version, Sequence) = (version, sequence);
         }

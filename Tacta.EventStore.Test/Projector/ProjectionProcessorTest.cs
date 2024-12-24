@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
@@ -11,8 +10,9 @@ using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector;
 using Tacta.EventStore.Repository;
 using Tacta.EventStore.Repository.Models;
-using Tacta.EventStore.Test.Projector.DomainEvents;
-using Tacta.EventStore.Test.Projector.Projections;
+using Tacta.EventStore.Test.Domain.AggregateRoots;
+using Tacta.EventStore.Test.Domain.DomainEvents;
+using Tacta.EventStore.Test.Domain.Identities;
 using Tacta.EventStore.Test.Repository;
 using Tacta.EventStore.Test.Repository.DomainEvents;
 using Xunit;
@@ -107,6 +107,21 @@ namespace Tacta.EventStore.Test.Projector
             // Then
             _projectionMock.Verify(x => x.Rebuild(), Times.AtLeast(2));
         }
+        
+        [Fact]
+        public async Task ProjectionProcessor_UsingCustomDomainEvent_ShouldReturnNumberOfProcessedEvents()
+        {
+            // Given
+            var (aggregate, events) = CreateAggregateWithCustomDomainEvent();
+            await _eventStoreRepository.SaveAsync(aggregate, events);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+
+            // When
+            var count = await processor.Process<CustomDomainEvent>();
+
+            // Then
+            count.Should().Be(1);
+        }
 
         private static SqlException GenerateRandomTransientSqlException()
         {
@@ -158,6 +173,27 @@ namespace Tacta.EventStore.Test.Projector
                 var fooRegistered = new FooRegistered(fooAggregateRecord.Id, "test_0");
 
                 events.Add(new EventRecord<DomainEvent>(fooRegistered.Id, fooRegistered.CreatedAt, fooRegistered));
+            }
+
+            return (fooAggregateRecord, events);
+        }
+        
+        private static (AggregateRecord, List<EventRecord<IDomainEvent>>) CreateAggregateWithCustomDomainEvent()
+        {
+            const int eventCount = 1;
+
+            var backlogItemId = new BacklogItemId();
+            var summary = "summary";
+            
+            var fooAggregateRecord = new AggregateRecord(backlogItemId.ToString(), nameof(BacklogItem), 0);
+
+            var events = new List<EventRecord<IDomainEvent>>();
+
+            for (var i = 0; i < eventCount; i++)
+            {
+                var backlogItemCreated = new BacklogItemCreatedCustomDomainEvent("customProperty", backlogItemId, summary);
+
+                events.Add(new EventRecord<IDomainEvent>(backlogItemCreated.Id, backlogItemCreated.CreatedAt, backlogItemCreated));
             }
 
             return (fooAggregateRecord, events);

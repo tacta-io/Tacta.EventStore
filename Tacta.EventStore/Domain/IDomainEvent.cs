@@ -11,5 +11,7 @@ namespace Tacta.EventStore.Domain
         int Version { get; }
         
         DateTime CreatedAt { get; set; }
+
+        void WithVersionAndSequence(int version, long sequence);
     }
 }
