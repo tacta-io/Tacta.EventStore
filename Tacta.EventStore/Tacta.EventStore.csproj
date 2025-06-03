@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.6.7</Version>
-    <PackageVersion>1.6.7</PackageVersion>
+    <Version>1.6.8</Version>
+    <PackageVersion>1.6.8</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Patch publish script 2</PackageReleaseNotes>
+    <PackageReleaseNotes>Add audit table for projections</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
