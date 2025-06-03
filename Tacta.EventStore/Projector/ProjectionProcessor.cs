@@ -15,16 +15,18 @@ namespace Tacta.EventStore.Projector
     {
         private readonly IEnumerable<IProjection> _projections;
         private readonly IEventStoreRepository _eventStoreRepository;
+        private readonly IAuditRepository _auditRepository;
         private readonly AsyncRetryPolicy _retryPolicy;
         private bool _isInitialized;
         private long _pivot;
         private readonly SemaphoreSlim _processingSemaphore = new SemaphoreSlim(1, 1);
 
-        public ProjectionProcessor(IEnumerable<IProjection> projections, IEventStoreRepository eventStoreRepository)
+        public ProjectionProcessor(IEnumerable<IProjection> projections, IEventStoreRepository eventStoreRepository, IAuditRepository auditRepository)
         {
             _projections = projections;
             _eventStoreRepository = eventStoreRepository;
             _retryPolicy = new SqlServerResiliencePolicyBuilder().WithDefaults().BuildTransientErrorRetryPolicy();
+            _auditRepository = auditRepository;
         }
 
         public async Task<string> Status(string service, int refreshRate = 5)
@@ -49,7 +51,7 @@ namespace Tacta.EventStore.Projector
             return content;
         }
 
-        public async Task<int> Process<T>(int take = 100, bool processParallel = false) where T : IDomainEvent
+        public async Task<int> Process<T>(int take = 100, bool processParallel = false, bool auditEnabled = false) where T : IDomainEvent
         {
             var processed = 0;
             
@@ -62,7 +64,15 @@ namespace Tacta.EventStore.Projector
                 try
                 {
                     var events = await Load<T>(take).ConfigureAwait(false);
-                    
+
+                    if (auditEnabled)
+                    {
+                        foreach (var @event in events)
+                        {
+                            await _auditRepository.SaveAsync(@event.Sequence, DateTime.Now);
+                        }
+                    }
+
                     if (processParallel)
                     {
                         var options = new ParallelOptions { MaxDegreeOfParallelism = _projections.Count() };
@@ -100,9 +110,9 @@ namespace Tacta.EventStore.Projector
         /// Loads events from Event Store as <see cref="DomainEvent"/>
         /// For custom domain events use <see cref="ProjectionProcessor.Process{T}(int, bool)"/>
         /// </summary>
-        public async Task<int> Process(int take = 100, bool processParallel = false)
+        public async Task<int> Process(int take = 100, bool processParallel = false, bool auditEnabled = false)
         {
-            return await Process<DomainEvent>(take, processParallel);
+            return await Process<DomainEvent>(take, processParallel, auditEnabled);
         }
 
         public async Task Rebuild(IEnumerable<Type> projectionTypes = null)

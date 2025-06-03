@@ -17,11 +17,13 @@ namespace Tacta.EventStore.Test.Projector
     {
         private readonly Mock<IProjectionRepository> _projectionRepository;
         private readonly Mock<IEventStoreRepository> _eventStoreRepository;
+        private readonly Mock<IAuditRepository> _auditRepository;
 
         public ProjectionTest()
         {
             _projectionRepository = new Mock<IProjectionRepository>();
             _eventStoreRepository = new Mock<IEventStoreRepository>();
+            _auditRepository = new Mock<IAuditRepository>();
         }
 
         [Fact]
@@ -47,7 +49,7 @@ namespace Tacta.EventStore.Test.Projector
 
             // When
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> {userProjection}, _eventStoreRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection> {userProjection}, _eventStoreRepository.Object, _auditRepository.Object);
             await processor.Process();
 
             // Then
@@ -77,7 +79,7 @@ namespace Tacta.EventStore.Test.Projector
 
             // When
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection>(), _eventStoreRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection>(), _eventStoreRepository.Object, _auditRepository.Object);
             await processor.Process();
 
             // Then
@@ -120,7 +122,7 @@ namespace Tacta.EventStore.Test.Projector
 
             // When
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _auditRepository.Object);
             await processor.Process();
 
             // Then
@@ -143,7 +145,7 @@ namespace Tacta.EventStore.Test.Projector
             });
 
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _auditRepository.Object);
             
             // When
             await processor.Rebuild();
@@ -186,7 +188,7 @@ namespace Tacta.EventStore.Test.Projector
                 });
 
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _auditRepository.Object);
 
             _projectionRepository.Setup(p => p.GetSequenceAsync()).ReturnsAsync(() =>
             {
@@ -239,7 +241,7 @@ namespace Tacta.EventStore.Test.Projector
                 });
 
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _auditRepository.Object);
             
             _projectionRepository.Setup(p => p.GetSequenceAsync()).ReturnsAsync(() =>
             {

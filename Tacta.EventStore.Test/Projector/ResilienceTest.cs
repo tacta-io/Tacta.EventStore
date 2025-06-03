@@ -18,11 +18,13 @@ namespace Tacta.EventStore.Test.Projector
         private IProjection _userProjection;
         private Mock<IEventStoreRepository> _eventStoreRepository;
         private Mock<IProjectionRepository> _userProjectionRepository;
+        private Mock<IAuditRepository> _auditRepository;
 
         public ResilienceTest()
         {
             SetupProjectionRepository();
             SetupEventStoreRepository();
+            SetupAuditRepository();
         }
 
         [Fact]
@@ -33,7 +35,7 @@ namespace Tacta.EventStore.Test.Projector
                 // Given
                 _userProjection = new UserProjection(_userProjectionRepository.Object);
                 var projections = new List<IProjection> { _userProjection };
-                var processor = new ProjectionProcessor(projections, _eventStoreRepository.Object);
+                var processor = new ProjectionProcessor(projections, _eventStoreRepository.Object, _auditRepository.Object);
 
                 // When
                 var numberOfProcessedEvents = await processor.Process().ConfigureAwait(false);
@@ -51,7 +53,7 @@ namespace Tacta.EventStore.Test.Projector
             // Given
             _userProjection = new VerySlowUserProjection(_userProjectionRepository.Object);
             var projections = new List<IProjection> { _userProjection };
-            var processor = new ProjectionProcessor(projections, _eventStoreRepository.Object);
+            var processor = new ProjectionProcessor(projections, _eventStoreRepository.Object, _auditRepository.Object);
 
             // When
             var processTask1 = processor.Process().ConfigureAwait(false);
@@ -148,6 +150,13 @@ namespace Tacta.EventStore.Test.Projector
                         Version = userBanned.Version
                     }
                 });
+        }
+
+        private void SetupAuditRepository()
+        {
+            _auditRepository = new Mock<IAuditRepository>();
+            _auditRepository.Setup(x => x.SaveAsync(It.IsAny<long>(), It.IsAny<DateTime>()))
+                .Returns(Task.CompletedTask);
         }
     }
 }

@@ -16,7 +16,8 @@ namespace Tacta.EventStore.Test.Repository
     {
         public const string UserReadModelTableName = "[dbo].[UserReadModel]";
         private const string EventStoreTableName = "[dbo].[EventStore]";
-        
+        private const string AuditTableName = "[dbo].[Audit]";
+
         private const string MasterConnectionString =
             @"Server=(localdb)\mssqlLocaldb; Database=master; Trusted_Connection=True;";
         private readonly string _connectionString;
@@ -49,6 +50,7 @@ namespace Tacta.EventStore.Test.Repository
         {
             CreateEventStoreTable();
             CreateUserReadModelTable();
+            CreateAuditTable();
         }
 
         private void DeleteDatabase()
@@ -108,6 +110,18 @@ namespace Tacta.EventStore.Test.Repository
 	                [Sequence] [int] NOT NULL,
 	                [EventId] [uniqueidentifier] NOT NULL,
 	                [Name] [nvarchar](50) NOT NULL) ON [PRIMARY]";
+
+            connection.Execute(sqlScript);
+        }
+
+        private void CreateAuditTable()
+        {
+            using var connection = new SqlConnection(_connectionString);
+            var sqlScript =
+                $@"CREATE TABLE {AuditTableName} (
+                    [Sequence] BIGINT NOT NULL,
+                    [AppliedAt] DATETIME2(7) NOT NULL);
+                CREATE NONCLUSTERED INDEX [SequenceIndex] ON [dbo].[Audit] ([Sequence]);";
 
             connection.Execute(sqlScript);
         }
