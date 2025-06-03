@@ -159,6 +159,28 @@ namespace Tacta.EventStore.Test.Projector
             _auditRepository.Verify(x => x.SaveAsync(It.IsAny<long>(), It.IsAny<DateTime>()), Times.Never);
         }
 
+        [Fact]
+        public async Task Process_WhenExceptionAfterAudit_CallsSaveAsyncForEachEventBeforeFailure()
+        {
+            // Given
+            var (aggregate, events) = CreateFooAggregateWithRegisteredEvents();
+            await _eventStoreRepository.SaveAsync(aggregate, events);
+
+            _projectionMock
+                .Setup(x => x.Apply(It.IsAny<IReadOnlyCollection<IDomainEvent>>()))
+                .ThrowsAsync(new InvalidOperationException("Apply failed"));
+
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
+
+            // When
+            var ex = await Record.ExceptionAsync(() => processor.Process(auditEnabled: true));
+
+            // Then
+            ex.Should().BeOfType<InvalidOperationException>().Which.Message.Should().Be("Apply failed");
+            _auditRepository.Verify(x => x.SaveAsync(1, It.IsAny<DateTime>()), Times.Once);
+            _auditRepository.Verify(x => x.SaveAsync(2, It.IsAny<DateTime>()), Times.Once);
+        }
+
         private static SqlException GenerateRandomTransientSqlException()
         {
             var random = new Random();
