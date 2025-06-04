@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.7.1-rc</Version>
-    <PackageVersion>1.7.1-rc</PackageVersion>
+    <Version>1.7.2-rc</Version>
+    <PackageVersion>1.7.2-rc</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Update publish script</PackageReleaseNotes>
+    <PackageReleaseNotes>Add step to install libssl</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
