@@ -14,7 +14,7 @@ jobs:
 
     - name: Install libssl1.1 manually (for netstandard2.0 support)
       run: |
-        wget wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5_amd64.deb
+        wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5_amd64.deb
         sudo dpkg -i libssl1.0.0_1.0.2n-1ubuntu5_amd64.deb
 
     - name: Setup .NET
