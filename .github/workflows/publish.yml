@@ -3,6 +3,7 @@ name: publish nuget package
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
 

@@ -20,7 +20,7 @@ using Xunit;
 #if USE_SYSTEM_DATA_SQLCLIENT
     using System.Data.SqlClient;
 #elif USE_MICROSOFT_DATA_SQLCLIENT
-    using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 #endif
 
 namespace Tacta.EventStore.Test.Projector
@@ -29,11 +29,13 @@ namespace Tacta.EventStore.Test.Projector
     {
         private readonly Mock<IProjection> _projectionMock;
         private readonly IEventStoreRepository _eventStoreRepository;
+        private readonly Mock<IAuditRepository> _auditRepository;
 
         public ProjectionProcessorTest()
         {
             _projectionMock = new Mock<IProjection>();
             _eventStoreRepository = new EventStoreRepository(ConnectionFactory);
+            _auditRepository = new Mock<IAuditRepository>();
         }
         
         [Fact]
@@ -41,7 +43,7 @@ namespace Tacta.EventStore.Test.Projector
         {
             // Given
             _projectionMock.Setup(x => x.Initialize()).Callback(() => throw new Exception());
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
 
             // When
             var _ = await Record.ExceptionAsync(async () => await processor.Process(100).ConfigureAwait(false));
@@ -55,7 +57,7 @@ namespace Tacta.EventStore.Test.Projector
         {
             // Given
             _projectionMock.Setup(x => x.Initialize()).Callback(() => throw GenerateRandomTransientSqlException());
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
 
             // When
             var _ = await Record.ExceptionAsync(async () => await processor.Process().ConfigureAwait(false));
@@ -70,7 +72,7 @@ namespace Tacta.EventStore.Test.Projector
             // Given
             var (aggregate, events) = CreateFooAggregateWithRegisteredEvents();
             await _eventStoreRepository.SaveAsync(aggregate, events);
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
 
             // When
             var count = await processor.Process();
@@ -85,7 +87,7 @@ namespace Tacta.EventStore.Test.Projector
             // Given
             var (aggregate, events) = CreateFooAggregateWithRegisteredEvents();
             await _eventStoreRepository.SaveAsync(aggregate, events);
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
 
             // When
             await processor.Rebuild();
@@ -99,7 +101,7 @@ namespace Tacta.EventStore.Test.Projector
         {
             // Given
             _projectionMock.Setup(x => x.Rebuild()).Callback(() => throw GenerateRandomTransientSqlException());
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
 
             // When
             var _ = await Record.ExceptionAsync(async () => await processor.Rebuild().ConfigureAwait(false));
@@ -114,13 +116,69 @@ namespace Tacta.EventStore.Test.Projector
             // Given
             var (aggregate, events) = CreateAggregateWithCustomDomainEvent();
             await _eventStoreRepository.SaveAsync(aggregate, events);
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
 
             // When
             var count = await processor.Process<CustomDomainEvent>();
 
             // Then
             count.Should().Be(1);
+        }
+
+        [Fact]
+        public async Task Process_WhenAuditEnabled_CallsSaveAsyncForEachEvent()
+        {
+            // Given
+            var (aggregate, events) = CreateFooAggregateWithRegisteredEvents();
+            await _eventStoreRepository.SaveAsync(aggregate, events);
+
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
+
+            // When
+            await processor.Process(auditEnabled: true);
+
+            // Then
+            _auditRepository.Verify(x => x.SaveAsync(1, It.IsAny<DateTime>()), Times.Once);
+            _auditRepository.Verify(x => x.SaveAsync(2, It.IsAny<DateTime>()), Times.Once);
+            _auditRepository.Verify(x => x.SaveAsync(3, It.IsAny<DateTime>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task Process_WhenAuditDisabled_DoesNotCallSaveAsync()
+        {
+            // Given
+            var (aggregate, events) = CreateFooAggregateWithRegisteredEvents();
+            await _eventStoreRepository.SaveAsync(aggregate, events);
+
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
+
+            // When
+            await processor.Process(auditEnabled: false);
+
+            // Assert
+            _auditRepository.Verify(x => x.SaveAsync(It.IsAny<long>(), It.IsAny<DateTime>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task Process_WhenExceptionAfterAudit_CallsSaveAsyncForEachEventBeforeFailure()
+        {
+            // Given
+            var (aggregate, events) = CreateFooAggregateWithRegisteredEvents();
+            await _eventStoreRepository.SaveAsync(aggregate, events);
+
+            _projectionMock
+                .Setup(x => x.Apply(It.IsAny<IReadOnlyCollection<IDomainEvent>>()))
+                .ThrowsAsync(new InvalidOperationException("Apply failed"));
+
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
+
+            // When
+            var ex = await Record.ExceptionAsync(() => processor.Process(auditEnabled: true));
+
+            // Then
+            ex.Should().BeOfType<InvalidOperationException>().Which.Message.Should().Be("Apply failed");
+            _auditRepository.Verify(x => x.SaveAsync(1, It.IsAny<DateTime>()), Times.Once);
+            _auditRepository.Verify(x => x.SaveAsync(2, It.IsAny<DateTime>()), Times.Once);
         }
 
         private static SqlException GenerateRandomTransientSqlException()
