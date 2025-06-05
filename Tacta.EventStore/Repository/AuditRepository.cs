@@ -18,7 +18,7 @@ namespace Tacta.EventStore.Repository
         {
             using(var connection = _connectionFactory.Connection())
             {
-                var query = "IF NOT EXISTS (SELECT 1 FROM Audit WHERE Sequence = @Sequence) INSERT INTO Audit (Sequence, AppliedAt) VALUES (@Sequence, @AppliedAt)";
+                var query = "IF NOT EXISTS (SELECT 1 FROM ProjectionsAuditLog WHERE Sequence = @Sequence) INSERT INTO ProjectionsAuditLog (Sequence, AppliedAt) VALUES (@Sequence, @AppliedAt)";
                 await connection.ExecuteAsync(query, new { Sequence = sequence, AppliedAt = appliedAt })
                     .ConfigureAwait(false);
             }

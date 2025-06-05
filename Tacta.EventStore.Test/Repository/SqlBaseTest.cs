@@ -16,7 +16,7 @@ namespace Tacta.EventStore.Test.Repository
     {
         public const string UserReadModelTableName = "[dbo].[UserReadModel]";
         private const string EventStoreTableName = "[dbo].[EventStore]";
-        private const string AuditTableName = "[dbo].[Audit]";
+        private const string AuditTableName = "[dbo].[ProjectionsAuditLog]";
 
         private const string MasterConnectionString =
             @"Server=(localdb)\mssqlLocaldb; Database=master; Trusted_Connection=True;";
@@ -121,7 +121,7 @@ namespace Tacta.EventStore.Test.Repository
                 $@"CREATE TABLE {AuditTableName} (
                     [Sequence] BIGINT NOT NULL,
                     [AppliedAt] DATETIME2(7) NOT NULL);
-                CREATE NONCLUSTERED INDEX [SequenceIndex] ON [dbo].[Audit] ([Sequence]);";
+                CREATE NONCLUSTERED INDEX [SequenceIndex] ON {AuditTableName} ([Sequence]);";
 
             connection.Execute(sqlScript);
         }

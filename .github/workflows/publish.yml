@@ -12,10 +12,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install libssl1.1 for netstandard2.0 compatibility
+    - name: Install libssl1.1 manually (for netstandard2.0 support)
       run: |
-        sudo apt-get update
-        sudo apt-get install -y libssl1.1 || sudo apt-get install -y libssl1.0.0 || echo "libssl1.1 not available, please check compatibility"
+        wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5_amd64.deb
+        sudo dpkg -i libssl1.0.0_1.0.2n-1ubuntu5_amd64.deb
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v3

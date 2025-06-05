@@ -25,7 +25,7 @@ namespace Tacta.EventStore.Test.Repository
             using (var connection = ConnectionFactory.Connection())
             {
                 var count = await connection.ExecuteScalarAsync<int>(
-                    "SELECT COUNT(*) FROM Audit WHERE Sequence = @Sequence",
+                    "SELECT COUNT(*) FROM ProjectionsAuditLog WHERE Sequence = @Sequence",
                     new { Sequence = 1 });
 
                 Assert.Equal(1, count);
@@ -44,7 +44,7 @@ namespace Tacta.EventStore.Test.Repository
             // Then
             using (var connection = ConnectionFactory.Connection())
             {
-                var count = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Audit");
+                var count = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM ProjectionsAuditLog");
 
                 Assert.Equal(2, count);
             }
