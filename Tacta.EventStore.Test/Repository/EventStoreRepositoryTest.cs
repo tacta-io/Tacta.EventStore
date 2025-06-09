@@ -775,10 +775,8 @@ namespace Tacta.EventStore.Test.Repository
         public async Task GetFromSequenceAndDateTimeAsync_ReturnsZeroEventsIfNoneAreCreatedMoreThan5SecondsAgo()
         {
             //Given
-            var secondsAgo = DateTime.Now.AddSeconds(-10);
-            await StoreFooRegisteredWithCreatedAt("fooId1", secondsAgo);
-            await StoreFooRegisteredWithCreatedAt("fooId2", secondsAgo);
-
+            var secondsAgo = DateTime.Now.AddMinutes(-5);
+            await StoreFooRegisteredWithCreatedAt("fooId1", secondsAgo.AddSeconds(10));
 
             // When
             var eventStoreRecords = await _eventStoreRepository.GetFromSequenceAndDateTimeAsync<DomainEvent>(0, 20, secondsAgo).ConfigureAwait(false);
