@@ -754,7 +754,39 @@ namespace Tacta.EventStore.Test.Repository
             // Then
             Assert.Equal(4, latestSequence);
         }
-        
+
+        [Fact]
+        public async Task GetFromSequenceAndDateTimeAsync_ReturnsAllEventsCreatedMoreThan5SecondsAgo()
+        {
+            //Given
+            var secondsAgo = DateTime.Now.AddSeconds(-5);
+            await StoreFooRegisteredWithCreatedAt("fooId1", secondsAgo.AddSeconds(-3));
+            await StoreFooRegisteredWithCreatedAt("fooId2", secondsAgo.AddSeconds(-1));
+
+
+            // When
+            var eventStoreRecords = await _eventStoreRepository.GetFromSequenceAndDateTimeAsync<DomainEvent>(0, 20, secondsAgo).ConfigureAwait(false);
+
+            // Then
+            Assert.Equal(2, eventStoreRecords.Count);
+        }
+
+        [Fact]
+        public async Task GetFromSequenceAndDateTimeAsync_ReturnsZeroEventsIfNoneAreCreatedMoreThan5SecondsAgo()
+        {
+            //Given
+            var secondsAgo = DateTime.Now.AddSeconds(-5);
+            await StoreFooRegisteredWithCreatedAt("fooId1", DateTime.Now);
+            await StoreFooRegisteredWithCreatedAt("fooId2", secondsAgo);
+
+
+            // When
+            var eventStoreRecords = await _eventStoreRepository.GetFromSequenceAndDateTimeAsync<DomainEvent>(0, 20, secondsAgo).ConfigureAwait(false);
+
+            // Then
+            Assert.Equal(0, eventStoreRecords.Count);
+        }
+
         private async Task StoreFooRegistered(string fooId)
         {
             var fooRegistered1 = new FooRegistered(fooId, "testing foo");
@@ -805,6 +837,19 @@ namespace Tacta.EventStore.Test.Repository
             await _eventStoreRepository.SaveAsync(aggregate).ConfigureAwait(false);
 
             return (ids[0], ids[1]);
+        }
+
+        private async Task StoreFooRegisteredWithCreatedAt(string fooId, DateTime createdAt)
+        {
+            var fooRegistered1 = new FooRegistered(fooId, Guid.NewGuid(), createdAt, "testing foo");
+
+            var aggregateRecordFoo1 = new AggregateRecord(fooId, "Foo", 0);
+            var eventRecordsFoo1 = new List<EventRecord<DomainEvent>>
+            {
+                new EventRecord<DomainEvent>(fooRegistered1.Id, fooRegistered1.CreatedAt, fooRegistered1)
+            };
+
+            await _eventStoreRepository.SaveAsync(aggregateRecordFoo1, eventRecordsFoo1).ConfigureAwait(false);
         }
     }
 }

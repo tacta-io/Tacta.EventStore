@@ -181,6 +181,42 @@ namespace Tacta.EventStore.Test.Projector
             _auditRepository.Verify(x => x.SaveAsync(2, It.IsAny<DateTime>()), Times.Once);
         }
 
+        [Fact]
+        public async Task Process_WhenPesimisticProcessingEnabledWithCreatedAtMoreThan5SecondsAgo_ShouldReturnNumberOfProcessedEvents()
+        {
+            // Given
+            var createdAt = DateTime.Now.AddMinutes(-1);
+            var (aggregate, events) = CreateFooAggregateWithRegisteredEventsWithCreatedAt(createdAt);
+            await _eventStoreRepository.SaveAsync(aggregate, events);
+
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
+
+            // When
+            var count = await processor.Process(auditEnabled: true, pesimisticProcessing: true);
+
+            // Then
+
+            count.Should().Be(3);
+        }
+
+        [Fact]
+        public async Task Process_WhenPesimisticProcessingEnabledWithCreatedAtLessThan5SecondsAgo_ShouldReturnNumberZero()
+        {
+            // Given
+            var createdAt = DateTime.Now.AddMinutes(5);
+            var (aggregate, events) = CreateFooAggregateWithRegisteredEventsWithCreatedAt(createdAt);
+            await _eventStoreRepository.SaveAsync(aggregate, events);
+
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
+
+            // When
+            var count = await processor.Process(auditEnabled: true, pesimisticProcessing: true);
+
+            // Then
+
+            count.Should().Be(0);
+        }
+
         private static SqlException GenerateRandomTransientSqlException()
         {
             var random = new Random();
@@ -252,6 +288,24 @@ namespace Tacta.EventStore.Test.Projector
                 var backlogItemCreated = new BacklogItemCreatedCustomDomainEvent("customProperty", backlogItemId, summary);
 
                 events.Add(new EventRecord<IDomainEvent>(backlogItemCreated.Id, backlogItemCreated.CreatedAt, backlogItemCreated));
+            }
+
+            return (fooAggregateRecord, events);
+        }
+
+        private static (AggregateRecord, List<EventRecord<DomainEvent>>) CreateFooAggregateWithRegisteredEventsWithCreatedAt(DateTime createdAt)
+        {
+            const int eventCount = 3;
+
+            var fooAggregateRecord = new AggregateRecord($"foo_{Guid.NewGuid()}", "Foo", 0);
+
+            var events = new List<EventRecord<DomainEvent>>();
+
+            for (var i = 0; i < eventCount; i++)
+            {
+                var fooRegistered = new FooRegistered(fooAggregateRecord.Id, Guid.NewGuid(), createdAt, "test_0");
+
+                events.Add(new EventRecord<DomainEvent>(fooRegistered.Id, fooRegistered.CreatedAt, fooRegistered));
             }
 
             return (fooAggregateRecord, events);
