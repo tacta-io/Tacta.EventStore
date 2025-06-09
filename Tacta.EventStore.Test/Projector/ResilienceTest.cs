@@ -41,7 +41,7 @@ namespace Tacta.EventStore.Test.Projector
                 var numberOfProcessedEvents = await processor.Process().ConfigureAwait(false);
 
                 // Then
-                numberOfProcessedEvents.Should().Be(3);
+                numberOfProcessedEvents.Processed.Should().Be(3);
                 _userProjection.GetSequence().Should().Be(843);
                 (_userProjection as UserProjection).AppliedSequences.Should().BeEquivalentTo(new List<int> { 841, 842, 843 });
             }
@@ -65,7 +65,7 @@ namespace Tacta.EventStore.Test.Projector
             var numberOfProcessedEvents = await processTask2;
 
             // Then
-            numberOfProcessedEvents.Should().Be(3);
+            numberOfProcessedEvents.Processed.Should().Be(3);
             _userProjection.GetSequence().Should().Be(843);
             (_userProjection as VerySlowUserProjection)!.AppliedSequences
                 .Should().BeEquivalentTo(new List<int> { 841, 842, 843, 841, 842, 843 });

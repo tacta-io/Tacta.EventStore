@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Polly.Retry;
 using Tacta.EventStore.Domain;
+using Tacta.EventStore.Projector.Models;
 using Tacta.EventStore.Repository;
 
 namespace Tacta.EventStore.Projector
@@ -51,7 +52,7 @@ namespace Tacta.EventStore.Projector
             return content;
         }
 
-        public async Task<int> Process<T>(int take = 100, bool processParallel = false, bool auditEnabled = false, bool pesimisticProcessing = false) where T : IDomainEvent
+        public async Task<ProcessData> Process<T>(int take = 100, bool processParallel = false, bool auditEnabled = false, bool pesimisticProcessing = false) where T : IDomainEvent
         {
             var processed = 0;
             
@@ -103,7 +104,7 @@ namespace Tacta.EventStore.Projector
                 }
             });
 
-            return processed;
+            return new ProcessData(processed, _pivot);
         }
 
         /// <summary>
@@ -121,7 +122,7 @@ namespace Tacta.EventStore.Projector
         /// This helps avoid processing events that may still be in-flight or uncommitted. Default is false.
         /// </param>
         /// <returns>The number of processed events.</returns>
-        public async Task<int> Process(int take = 100, bool processParallel = false, bool auditEnabled = false, bool pesimisticProcessing = false)
+        public async Task<ProcessData> Process(int take = 100, bool processParallel = false, bool auditEnabled = false, bool pesimisticProcessing = false)
         {
             return await Process<DomainEvent>(take, processParallel, auditEnabled, pesimisticProcessing);
         }

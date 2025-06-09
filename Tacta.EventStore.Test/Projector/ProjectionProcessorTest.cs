@@ -78,7 +78,7 @@ namespace Tacta.EventStore.Test.Projector
             var count = await processor.Process();
 
             // Then
-            count.Should().Be(3);
+            count.Processed.Should().Be(3);
         }
 
         [Fact]
@@ -122,7 +122,7 @@ namespace Tacta.EventStore.Test.Projector
             var count = await processor.Process<CustomDomainEvent>();
 
             // Then
-            count.Should().Be(1);
+            count.Processed.Should().Be(1);
         }
 
         [Fact]
@@ -196,7 +196,7 @@ namespace Tacta.EventStore.Test.Projector
 
             // Then
 
-            count.Should().Be(3);
+            count.Processed.Should().Be(3);
         }
 
         [Fact]
@@ -214,7 +214,25 @@ namespace Tacta.EventStore.Test.Projector
 
             // Then
 
-            count.Should().Be(0);
+            count.Processed.Should().Be(0);
+        }
+
+        [Fact]
+        public async Task Process_ShouldReturnProcessData()
+        {
+            // Given
+            var (aggregate, events) = CreateFooAggregateWithRegisteredEvents();
+            await _eventStoreRepository.SaveAsync(aggregate, events);
+
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
+
+            // When
+            var count = await processor.Process();
+
+            // Then
+
+            count.Processed.Should().Be(3);
+            count.Pivot.Should().Be(3L);
         }
 
         private static SqlException GenerateRandomTransientSqlException()
