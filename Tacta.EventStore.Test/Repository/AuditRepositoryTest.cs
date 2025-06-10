@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using FluentAssertions;
 using System;
 using System.Threading.Tasks;
 using Tacta.EventStore.Repository;
@@ -48,6 +49,54 @@ namespace Tacta.EventStore.Test.Repository
 
                 Assert.Equal(2, count);
             }
+        }
+
+        [Fact]
+        public async Task DetectProjectionsGap_DetectsProjectionGap()
+        {
+            using (var connection = ConnectionFactory.Connection())
+            {
+                await connection.OpenAsync();
+                await connection.ExecuteAsync("SET IDENTITY_INSERT [dbo].[EventStore] ON");
+                for (long seq = 1; seq <= 20; seq++)
+                {
+                    await connection.ExecuteAsync(
+                        "INSERT INTO [dbo].[EventStore] ([Sequence], [Id], [Name], [AggregateId], [Aggregate], [Version], [CreatedAt], [Payload]) " +
+                        "VALUES (@Sequence, @Id, @Name, @AggregateId, @Aggregate, @Version, @CreatedAt, @Payload)",
+                        new
+                        {
+                            Id = Guid.NewGuid(),
+                            Sequence = seq,
+                            Name = $"Event {seq}",
+                            AggregateId = $"Event_{seq}",
+                            Aggregate = "Event",
+                            Version = 1,
+                            CreatedAt = DateTime.Now.AddDays(-2),
+                            Payload = "{}"
+                        });
+                }
+                await connection.ExecuteAsync("SET IDENTITY_INSERT [dbo].[EventStore] OFF");
+            }
+
+            using (var connection = ConnectionFactory.Connection())
+            {
+                await connection.OpenAsync();
+                for (long seq = 1; seq <= 10; seq++)
+                {
+                    if (seq == 3) continue;
+                    await connection.ExecuteAsync(
+                        "INSERT INTO [dbo].[ProjectionsAuditLog] ([Sequence], [AppliedAt]) VALUES (@Sequence, @AppliedAt)",
+                        new { Sequence = seq, AppliedAt = DateTime.Now.AddMinutes(-30) });
+                }
+            }
+
+            // When
+            var result = await _auditRepository.DetectProjectionsGap(10, DateTime.Now.AddHours(-1));
+
+            // Then
+            result.Should().NotBeNull();
+            result.Should().HaveCount(1);
+            result[0].Should().Be(3);
         }
     }
 }
