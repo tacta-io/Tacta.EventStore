@@ -68,10 +68,7 @@ namespace Tacta.EventStore.Projector
 
                     if (auditEnabled)
                     {
-                        foreach (var @event in events)
-                        {
-                            await _auditRepository.SaveAsync(@event.Sequence, DateTime.Now);
-                        }
+                        await AuditEventsAsync(events).ConfigureAwait(false);
                     }
 
                     if (processParallel)
@@ -180,6 +177,12 @@ namespace Tacta.EventStore.Projector
             eventStoreRecords.ToList().ForEach(x => x.Event.WithVersionAndSequence(x.Version, x.Sequence));
             
             return eventStoreRecords.Select(x => (IDomainEvent)x.Event).ToList().AsReadOnly();
+        }
+
+        private async Task AuditEventsAsync(IReadOnlyCollection<IDomainEvent> events)
+        {
+            foreach (var @event in events)
+                await _auditRepository.SaveAsync(@event.Sequence, DateTime.Now).ConfigureAwait(false);
         }
     }
 }

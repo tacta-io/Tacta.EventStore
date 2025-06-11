@@ -12,10 +12,20 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.7.8-rc</Version>
-    <PackageVersion>1.7.8-rc</PackageVersion>
+    <Version>1.8.0</Version>
+    <PackageVersion>1.8.0</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Update projections gap detector</PackageReleaseNotes>
+    <PackageReleaseNotes>
+		New Features:
+		•	Audit Logging:
+		Introduced audit logging for projections. Each time a projection is applied, an entry is recorded in the ProjectionsAuditLog table, capturing the event sequence and the timestamp when the projection was applied. This provides traceability and helps ensure the integrity of the projection process.
+		•	Projections Gap Detection:
+		Added a process to detect gaps in projections. The AuditRepository can now identify events in the EventStore that have not yet been applied to projections by checking for missing entries in the ProjectionsAuditLog. This feature helps ensure that all events are properly projected and makes it easier to identify and address any missed events.
+		
+		Breaking Changes:
+		•	Process Method Return Type:
+		The Process method now returns a ProcessData object containing both the number of processed events and the current pivot sequence, instead of a simple integer. Update any code that consumes this method to handle the new return type.
+	</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
