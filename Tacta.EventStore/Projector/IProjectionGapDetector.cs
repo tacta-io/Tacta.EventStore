@@ -5,6 +5,6 @@ namespace Tacta.EventStore.Projector
 {
     public interface IProjectionGapDetector
     {
-        Task DetectGap(long pivot, DateTime appliedAfter);
+        Task DetectGap(long sequenceEnd);
     }
 }

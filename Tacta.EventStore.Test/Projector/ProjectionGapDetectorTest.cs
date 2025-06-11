@@ -1,5 +1,4 @@
 ﻿using Moq;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tacta.EventStore.Projector;
@@ -17,7 +16,6 @@ namespace Tacta.EventStore.Test.Projector
         public ProjectionGapDetectorTest()
         {
             _auditRepositoryMock = new Mock<IAuditRepository>();
-            
         }
 
         [Fact]
@@ -27,11 +25,11 @@ namespace Tacta.EventStore.Test.Projector
             var projectionGapDetector = new ProjectionGapDetector(_auditRepositoryMock.Object);
             long pivot = 100;
 
-            _auditRepositoryMock.Setup(x => x.DetectProjectionsGap(It.IsAny<long>(), It.IsAny<DateTime>()))
+            _auditRepositoryMock.Setup(x => x.DetectProjectionsGap(It.IsAny<long>(), It.IsAny<long>()))
                 .ReturnsAsync(new List<long> { 1, 2, 3 });
 
             // When & Then
-            var exception = await Assert.ThrowsAsync<ProjectionGapException>(() => projectionGapDetector.DetectGap(pivot, DateTime.Now.AddHours(-1)));
+            var exception = await Assert.ThrowsAsync<ProjectionGapException>(() => projectionGapDetector.DetectGap(pivot));
             Assert.Equal("Skipped projections detected: 1, 2, 3. Please rebuild the projections to ensure consistency.", exception.Message);
         }
 
@@ -41,11 +39,11 @@ namespace Tacta.EventStore.Test.Projector
             // Given
             var projectionGapDetector = new ProjectionGapDetector(_auditRepositoryMock.Object);
             long pivot = 100;
-            _auditRepositoryMock.Setup(x => x.DetectProjectionsGap(It.IsAny<long>(), It.IsAny<DateTime>()))
+            _auditRepositoryMock.Setup(x => x.DetectProjectionsGap(It.IsAny<long>(), It.IsAny<long>()))
                 .ReturnsAsync(new List<long>());
 
             // When & Then
-            await projectionGapDetector.DetectGap(pivot, DateTime.Now.AddHours(-1));
+            await projectionGapDetector.DetectGap(pivot);
         }
     }
 }

@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.7.7-rc</Version>
-    <PackageVersion>1.7.7-rc</PackageVersion>
+    <Version>1.7.8-rc</Version>
+    <PackageVersion>1.7.8-rc</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Add projections gap detector</PackageReleaseNotes>
+    <PackageReleaseNotes>Update projections gap detector</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>

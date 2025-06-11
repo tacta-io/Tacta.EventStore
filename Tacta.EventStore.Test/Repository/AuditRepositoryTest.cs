@@ -54,6 +54,34 @@ namespace Tacta.EventStore.Test.Repository
         [Fact]
         public async Task DetectProjectionsGap_DetectsProjectionGap()
         {
+            //Given
+            await PopulateEventStoreAndAuditLogWithGaps();
+
+            // When
+            var result = await _auditRepository.DetectProjectionsGap(0, 10);
+
+            // Then
+            result.Should().NotBeNull();
+            result.Should().HaveCount(1);
+            result[0].Should().Be(3);
+        }
+
+        [Fact]
+        public async Task DetectProjectionsGap_DoesNotDetectGap_WhenSelectedBatchDoesNotHaveAnyGaps()
+        {
+            //Given
+            await PopulateEventStoreAndAuditLogWithGaps();
+
+            // When
+            var result = await _auditRepository.DetectProjectionsGap(4, 10);
+
+            // Then
+            result.Should().NotBeNull();
+            result.Should().HaveCount(0);
+        }
+
+        private async Task PopulateEventStoreAndAuditLogWithGaps()
+        {
             using (var connection = ConnectionFactory.Connection())
             {
                 await connection.OpenAsync();
@@ -89,14 +117,6 @@ namespace Tacta.EventStore.Test.Repository
                         new { Sequence = seq, AppliedAt = DateTime.Now.AddMinutes(-30) });
                 }
             }
-
-            // When
-            var result = await _auditRepository.DetectProjectionsGap(10, DateTime.Now.AddHours(-1));
-
-            // Then
-            result.Should().NotBeNull();
-            result.Should().HaveCount(1);
-            result[0].Should().Be(3);
         }
     }
 }

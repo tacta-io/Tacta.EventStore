@@ -8,6 +8,6 @@ namespace Tacta.EventStore.Repository
     {
         Task SaveAsync(long sequence, DateTime appliedAt);
 
-        Task<List<long>> DetectProjectionsGap(long pivot, DateTime appliedAfter);
+        Task<List<long>> DetectProjectionsGap(long sequenceStart,long sequenceEnd);
     }
 }

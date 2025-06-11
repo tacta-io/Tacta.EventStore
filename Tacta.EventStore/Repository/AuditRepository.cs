@@ -26,18 +26,17 @@ namespace Tacta.EventStore.Repository
             }
         }
 
-        public async Task<List<long>> DetectProjectionsGap(long pivot, DateTime appliedAfter)
+        public async Task<List<long>> DetectProjectionsGap(long sequenceStart, long sequenceEnd)
         {
             using (var connection = _connectionFactory.Connection())
             {
                 var sql = $@"SELECT ES.Sequence 
-                          FROM dbo.EventStore ES 
+                          FROM ( SELECT Sequence FROM dbo.EventStore
+                                 WHERE Sequence >= @SequenceStart AND Sequence <= @SequenceEnd ) AS ES
                           LEFT JOIN dbo.ProjectionsAuditLog PA ON ES.Sequence = PA.Sequence
-                          WHERE PA.Sequence IS NULL
-                          AND ES.Sequence <= @Pivot
-                          ORDER BY ES.Sequence";
+                          WHERE PA.Sequence IS NULL";
 
-                var result = await connection.QueryAsync<long>(sql, new { Pivot = pivot }).ConfigureAwait(false);
+                var result = await connection.QueryAsync<long>(sql, new { SequenceStart = sequenceStart, SequenceEnd = sequenceEnd }).ConfigureAwait(false);
                 return result.ToList();
             }
         }
