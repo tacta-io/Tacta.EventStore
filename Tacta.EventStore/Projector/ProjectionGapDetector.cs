@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Tacta.EventStore.Repository;
 using Tacta.EventStore.Repository.Exceptions;
@@ -14,6 +13,7 @@ namespace Tacta.EventStore.Projector
     {
         private readonly IAuditRepository _auditRepository;
         private long _pivot;
+
         public ProjectionGapDetector(IAuditRepository auditRepository)
         {
             _auditRepository = auditRepository;

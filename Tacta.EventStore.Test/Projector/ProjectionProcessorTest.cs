@@ -155,7 +155,7 @@ namespace Tacta.EventStore.Test.Projector
             // When
             await processor.Process(auditEnabled: false);
 
-            // Assert
+            // Then
             _auditRepository.Verify(x => x.SaveAsync(It.IsAny<long>(), It.IsAny<DateTime>()), Times.Never);
         }
 
@@ -186,7 +186,7 @@ namespace Tacta.EventStore.Test.Projector
         {
             // Given
             var createdAt = DateTime.Now.AddMinutes(-1);
-            var (aggregate, events) = CreateFooAggregateWithRegisteredEventsWithCreatedAt(createdAt);
+            var (aggregate, events) = CreateFooAggregateWithRegisteredEventsAndCreatedAt(createdAt);
             await _eventStoreRepository.SaveAsync(aggregate, events);
 
             var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
@@ -195,7 +195,6 @@ namespace Tacta.EventStore.Test.Projector
             var count = await processor.Process(auditEnabled: true, pesimisticProcessing: true);
 
             // Then
-
             count.Processed.Should().Be(3);
         }
 
@@ -204,7 +203,7 @@ namespace Tacta.EventStore.Test.Projector
         {
             // Given
             var createdAt = DateTime.Now.AddMinutes(5);
-            var (aggregate, events) = CreateFooAggregateWithRegisteredEventsWithCreatedAt(createdAt);
+            var (aggregate, events) = CreateFooAggregateWithRegisteredEventsAndCreatedAt(createdAt);
             await _eventStoreRepository.SaveAsync(aggregate, events);
 
             var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
@@ -213,7 +212,6 @@ namespace Tacta.EventStore.Test.Projector
             var count = await processor.Process(auditEnabled: true, pesimisticProcessing: true);
 
             // Then
-
             count.Processed.Should().Be(0);
         }
 
@@ -230,7 +228,6 @@ namespace Tacta.EventStore.Test.Projector
             var count = await processor.Process();
 
             // Then
-
             count.Processed.Should().Be(3);
             count.Pivot.Should().Be(3L);
         }
@@ -311,7 +308,7 @@ namespace Tacta.EventStore.Test.Projector
             return (fooAggregateRecord, events);
         }
 
-        private static (AggregateRecord, List<EventRecord<DomainEvent>>) CreateFooAggregateWithRegisteredEventsWithCreatedAt(DateTime createdAt)
+        private static (AggregateRecord, List<EventRecord<DomainEvent>>) CreateFooAggregateWithRegisteredEventsAndCreatedAt(DateTime createdAt)
         {
             const int eventCount = 3;
 
