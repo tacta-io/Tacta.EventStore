@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Polly.Retry;
 using Tacta.EventStore.Domain;
+using Tacta.EventStore.Projector.Models;
 using Tacta.EventStore.Repository;
 
 namespace Tacta.EventStore.Projector
@@ -51,7 +52,7 @@ namespace Tacta.EventStore.Projector
             return content;
         }
 
-        public async Task<int> Process<T>(int take = 100, bool processParallel = false, bool auditEnabled = false) where T : IDomainEvent
+        public async Task<ProcessData> Process<T>(int take = 100, bool processParallel = false, bool auditEnabled = false, bool pesimisticProcessing = false) where T : IDomainEvent
         {
             var processed = 0;
             
@@ -63,14 +64,11 @@ namespace Tacta.EventStore.Projector
                 await _processingSemaphore.WaitAsync().ConfigureAwait(false);
                 try
                 {
-                    var events = await Load<T>(take).ConfigureAwait(false);
+                    var events = await Load<T>(take, pesimisticProcessing).ConfigureAwait(false);
 
                     if (auditEnabled)
                     {
-                        foreach (var @event in events)
-                        {
-                            await _auditRepository.SaveAsync(@event.Sequence, DateTime.Now);
-                        }
+                        await AuditEventsAsync(events).ConfigureAwait(false);
                     }
 
                     if (processParallel)
@@ -103,16 +101,27 @@ namespace Tacta.EventStore.Projector
                 }
             });
 
-            return processed;
+            return new ProcessData(processed, _pivot);
         }
 
         /// <summary>
         /// Loads events from Event Store as <see cref="DomainEvent"/>
-        /// For custom domain events use <see cref="ProjectionProcessor.Process{T}(int, bool)"/>
+        /// For custom domain events use <see cref="ProjectionProcessor.Process{T}(int, bool, bool, bool)"/>
         /// </summary>
-        public async Task<int> Process(int take = 100, bool processParallel = false, bool auditEnabled = false)
+        /// <param name="take">The maximum number of events to process in one batch. Default is 100.</param>
+        /// <param name="processParallel">If true, projections are applied in parallel; otherwise, sequentially. Default is false.</param>
+        /// <param name="auditEnabled">
+        /// If true, an audit entry is written for each processed event.
+        /// Enables tracking of event processing for auditing purposes. Default is false.
+        /// </param>
+        /// <param name="pesimisticProcessing">
+        /// If true, only events older than a short threshold (e.g., 5 seconds) are loaded for processing.
+        /// This helps avoid processing events that may still be in-flight or uncommitted. Default is false.
+        /// </param>
+        /// <returns>The number of processed events.</returns>
+        public async Task<ProcessData> Process(int take = 100, bool processParallel = false, bool auditEnabled = false, bool pesimisticProcessing = false)
         {
-            return await Process<DomainEvent>(take, processParallel, auditEnabled);
+            return await Process<DomainEvent>(take, processParallel, auditEnabled, pesimisticProcessing);
         }
 
         public async Task Rebuild(IEnumerable<Type> projectionTypes = null)
@@ -157,15 +166,23 @@ namespace Tacta.EventStore.Projector
             _isInitialized = true;
         }
 
-        private async Task<IReadOnlyCollection<IDomainEvent>> Load<T>(int take) where T : IDomainEvent
+        private async Task<IReadOnlyCollection<IDomainEvent>> Load<T>(int take, bool pesimisticProcessing = false) where T : IDomainEvent
         {
-            var eventStoreRecords = await _eventStoreRepository
-                .GetFromSequenceAsync<T>(_pivot, take)
-                .ConfigureAwait(false);
+            IReadOnlyCollection<EventStoreRecord<T>> eventStoreRecords = pesimisticProcessing
+                ? await _eventStoreRepository.GetFromSequenceAndDateTimeAsync<T>(
+                    _pivot, take, DateTime.Now.AddSeconds(-5)).ConfigureAwait(false)
+                : await _eventStoreRepository.GetFromSequenceAsync<T>(
+                    _pivot, take).ConfigureAwait(false);
 
             eventStoreRecords.ToList().ForEach(x => x.Event.WithVersionAndSequence(x.Version, x.Sequence));
-
+            
             return eventStoreRecords.Select(x => (IDomainEvent)x.Event).ToList().AsReadOnly();
+        }
+
+        private async Task AuditEventsAsync(IReadOnlyCollection<IDomainEvent> events)
+        {
+            foreach (var @event in events)
+                await _auditRepository.SaveAsync(@event.Sequence, DateTime.Now).ConfigureAwait(false);
         }
     }
 }
