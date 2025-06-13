@@ -13,5 +13,6 @@ namespace Tacta.EventStore.Projector
         long GetSequence();
 
         Task Rebuild();
+        Task Delete(string aggregateId);
     }
 }

@@ -26,5 +26,7 @@ namespace Tacta.EventStore.Repository
                 return sequence ?? default;
             }
         }
+
+        public abstract Task Delete(string aggregateId);
     }
 }

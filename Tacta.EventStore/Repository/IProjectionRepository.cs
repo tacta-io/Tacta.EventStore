@@ -7,5 +7,6 @@ namespace Tacta.EventStore.Repository
     {
         Task<long> GetSequenceAsync();
         Task DeleteAllAsync();
+        Task Delete(string aggregateId);
     }
 }

@@ -62,5 +62,8 @@ namespace Tacta.EventStore.Repository
                 WHERE [Sequence] > @Sequence
                 AND [CreatedAt] < @SecondsAgo
                 ORDER BY [Sequence]";
+
+        public static string SelectAggregateIdBySequenceQuery =
+            @"SELECT DISTINCT [AggregateId] FROM [dbo].[EventStore] WHERE [Sequence] in @Sequences";
     }
 }
