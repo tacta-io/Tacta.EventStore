@@ -207,6 +207,20 @@ namespace Tacta.EventStore.Repository
             }, cancellationToken);
         }
 
+        public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetFromSequenceAndDateTimeAsync<T>(long sequence, int? take = null, DateTime? secondsAgo = null, CancellationToken cancellationToken = default)
+        {
+            if (sequence < 0)
+                throw new InvalidSequenceException("Sequence cannot be less the zero");
+
+            var query = take.HasValue
+                ? StoredEvent.SelectChunkedWithLimitAndSecondsAgoQuery
+                : StoredEvent.SelectChunkedWithSecondsAgoAndWithoutLimitQuery;
+
+            var param = new { Sequence = sequence, Take = take, SecondsAgo = secondsAgo };
+
+            return await GetAsync<T>(query, param, cancellationToken).ConfigureAwait(false);
+        }
+
         public async Task<IEnumerable<string>> GetDistinctAggregateIds(List<long> sequences, CancellationToken cancellationToken = default)
         {
             return await _sqlConnectionFactory.ExecuteWithTransactionIfExists(async (connection, transaction) =>
