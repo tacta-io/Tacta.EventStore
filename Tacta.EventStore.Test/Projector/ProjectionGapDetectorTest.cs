@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tacta.EventStore.Projector;
 using Tacta.EventStore.Repository;
-using Tacta.EventStore.Repository.Exceptions;
 using Tacta.EventStore.Test.Repository;
 using Xunit;
 
@@ -19,7 +18,7 @@ namespace Tacta.EventStore.Test.Projector
         }
 
         [Fact]
-        public async Task DetectGap_ThrowsProjectionGapException_WhenSkippedProjectionsDetected()
+        public async Task DetectGap_ReturnsSkippedEvents_WhenSkippedProjectionsDetected()
         {
             // Given
             var projectionGapDetector = new ProjectionGapDetector(_auditRepositoryMock.Object);
@@ -28,13 +27,16 @@ namespace Tacta.EventStore.Test.Projector
             _auditRepositoryMock.Setup(x => x.DetectProjectionsGap(It.IsAny<long>(), It.IsAny<long>()))
                 .ReturnsAsync(new List<long> { 1, 2, 3 });
 
-            // When & Then
-            var exception = await Assert.ThrowsAsync<ProjectionGapException>(() => projectionGapDetector.DetectGap(pivot));
-            Assert.Equal("Skipped projections detected: 1, 2, 3. Please rebuild the projections to ensure consistency.", exception.Message);
+            // When
+            var skippedProjections = await projectionGapDetector.DetectGap(pivot);
+
+            //Then
+            Assert.NotNull(skippedProjections);
+            Assert.Equal(3, skippedProjections.Count);
         }
 
         [Fact]
-        public async Task DetectGap_DoesNotThrow_WhenNoSkippedProjectionsDetected()
+        public async Task DetectGap_ReturnsEmptyList_WhenNoSkippedProjectionsDetected()
         {
             // Given
             var projectionGapDetector = new ProjectionGapDetector(_auditRepositoryMock.Object);
@@ -42,8 +44,12 @@ namespace Tacta.EventStore.Test.Projector
             _auditRepositoryMock.Setup(x => x.DetectProjectionsGap(It.IsAny<long>(), It.IsAny<long>()))
                 .ReturnsAsync(new List<long>());
 
-            // When & Then
-            await projectionGapDetector.DetectGap(pivot);
+            // When
+            var skippedProjections = await projectionGapDetector.DetectGap(pivot);
+
+            //Then
+            Assert.NotNull(skippedProjections);
+            Assert.Empty(skippedProjections);
         }
     }
 }

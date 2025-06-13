@@ -16,10 +16,12 @@ namespace Tacta.EventStore.Projector
 
         public HealProjections(
             IEventStoreRepository eventStoreRepository,
-            IEnumerable<IProjection> projections)
+            IEnumerable<IProjection> projections,
+            IAuditRepository auditRepository)
         {
             _eventStoreRepository = eventStoreRepository;
             _projections = projections;
+            _auditRepository = auditRepository;
         }
 
         public async Task TryHeal(List<long> skippedSequences, CancellationToken cancellationToken)
