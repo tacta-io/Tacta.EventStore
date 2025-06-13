@@ -183,6 +183,8 @@ namespace Tacta.EventStore.Repository
             }, cancellationToken);                
         }
 
+
+
         public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string query, object param, CancellationToken cancellationToken = default)
         {
             return await _sqlConnectionFactory.ExecuteWithTransactionIfExists<IReadOnlyCollection<EventStoreRecord<T>>>(async (connection, transaction) =>
@@ -202,6 +204,14 @@ namespace Tacta.EventStore.Repository
                     Version = @event.Version,
                     Sequence = @event.Sequence
                 }).OrderBy(x => x.Sequence).ToList().AsReadOnly();
+            }, cancellationToken);
+        }
+
+        public async Task<IEnumerable<string>> GetDistinctAggregateIds(List<long> sequences, CancellationToken cancellationToken = default)
+        {
+            return await _sqlConnectionFactory.ExecuteWithTransactionIfExists(async (connection, transaction) =>
+            {
+                return await connection.QueryAsync<string>(StoredEvent.SelectAggregateIdBySequenceQuery, new { Sequences = sequences }, transaction: transaction).ConfigureAwait(false);
             }, cancellationToken);
         }
     }

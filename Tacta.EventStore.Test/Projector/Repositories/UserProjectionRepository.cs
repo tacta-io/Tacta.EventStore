@@ -1,4 +1,5 @@
-﻿using Tacta.Connection;
+﻿using System.Threading.Tasks;
+using Tacta.Connection;
 using Tacta.EventStore.Repository;
 
 namespace Tacta.EventStore.Test.Projector.Repositories
@@ -8,5 +9,7 @@ namespace Tacta.EventStore.Test.Projector.Repositories
         public UserProjectionRepository(IConnectionFactory connectionFactory, string table) : base(connectionFactory, table)
         {
         }
+
+        public override Task Delete(string aggregateId) => throw new System.NotImplementedException();
     }
 }
