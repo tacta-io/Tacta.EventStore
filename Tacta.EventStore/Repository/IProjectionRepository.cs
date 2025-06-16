@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Tacta.EventStore.Repository
 {
@@ -7,6 +6,5 @@ namespace Tacta.EventStore.Repository
     {
         Task<long> GetSequenceAsync();
         Task DeleteAllAsync();
-        Task Delete(string aggregateId);
     }
 }

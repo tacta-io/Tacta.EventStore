@@ -41,7 +41,6 @@ namespace Tacta.EventStore.Projector
             await Initialize().ConfigureAwait(false);
         }
 
-        public async Task Delete(string aggregateId) 
-            => await _projectionRepository.Delete(aggregateId);
+        public abstract Task Delete(string aggregateId);
     }
 }

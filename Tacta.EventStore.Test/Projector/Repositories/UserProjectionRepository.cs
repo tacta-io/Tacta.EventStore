@@ -9,7 +9,5 @@ namespace Tacta.EventStore.Test.Projector.Repositories
         public UserProjectionRepository(IConnectionFactory connectionFactory, string table) : base(connectionFactory, table)
         {
         }
-
-        public override Task Delete(string aggregateId) => throw new System.NotImplementedException();
     }
 }

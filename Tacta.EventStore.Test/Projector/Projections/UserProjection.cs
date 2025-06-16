@@ -32,5 +32,10 @@ namespace Tacta.EventStore.Test.Projector.Projections
 
             AppliedSequences.Add(@event.Sequence);
         }
+
+        public override Task Delete(string aggregateId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -97,7 +97,11 @@ namespace Tacta.EventStore.Test.Projector
                 await Task.Delay(3000);
                 AppliedSequences.Add(@event.Sequence);
             }
-            
+
+            public override Task Delete(string aggregateId)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private void SetupProjectionRepository()
