@@ -49,20 +49,6 @@ namespace Tacta.EventStore.Repository
         public static string SelectLatestSequenceQuery =
             @"SELECT MAX ([Sequence]) FROM [dbo].[EventStore]";
 
-        public static string SelectChunkedWithLimitAndSecondsAgoQuery =
-           @"SELECT TOP (@Take) [Id], [AggregateId], [Version], [CreatedAt], [Payload], [Sequence] 
-                FROM [dbo].[EventStore] 
-                WHERE [Sequence] > @Sequence
-                AND [CreatedAt] < @SecondsAgo
-                ORDER BY [Sequence]";
-
-        public static string SelectChunkedWithSecondsAgoAndWithoutLimitQuery =
-           @"SELECT [Id], [AggregateId], [Version], [CreatedAt], [Payload], [Sequence] 
-                FROM [dbo].[EventStore] 
-                WHERE [Sequence] > @Sequence
-                AND [CreatedAt] < @SecondsAgo
-                ORDER BY [Sequence]";
-
         public static string SelectAggregateIdBySequenceQuery =
             @"SELECT DISTINCT [AggregateId] FROM [dbo].[EventStore] WHERE [Sequence] in @Sequences";
     }
