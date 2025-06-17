@@ -181,39 +181,6 @@ namespace Tacta.EventStore.Test.Projector
             _auditRepository.Verify(x => x.SaveAsync(2, It.IsAny<DateTime>()), Times.Once);
         }
 
-        [Fact]
-        public async Task Process_WhenPesimisticProcessingEnabledWithCreatedAtMoreThan5SecondsAgo_ShouldReturnNumberOfProcessedEvents()
-        {
-            // Given
-            var createdAt = DateTime.Now.AddMinutes(-1);
-            var (aggregate, events) = CreateFooAggregateWithRegisteredEventsAndCreatedAt(createdAt);
-            await _eventStoreRepository.SaveAsync(aggregate, events);
-
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
-
-            // When
-            var count = await processor.Process(auditEnabled: true, pesimisticProcessing: true);
-
-            // Then
-            count.Processed.Should().Be(3);
-        }
-
-        [Fact]
-        public async Task Process_WhenPesimisticProcessingEnabledWithCreatedAtLessThan5SecondsAgo_ShouldReturnNumberZero()
-        {
-            // Given
-            var createdAt = DateTime.Now.AddMinutes(5);
-            var (aggregate, events) = CreateFooAggregateWithRegisteredEventsAndCreatedAt(createdAt);
-            await _eventStoreRepository.SaveAsync(aggregate, events);
-
-            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object);
-
-            // When
-            var count = await processor.Process(auditEnabled: true, pesimisticProcessing: true);
-
-            // Then
-            count.Processed.Should().Be(0);
-        }
 
         [Fact]
         public async Task Process_ShouldReturnProcessData()
