@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector;
@@ -18,12 +19,14 @@ namespace Tacta.EventStore.Test.Projector
         private readonly Mock<IProjectionRepository> _projectionRepository;
         private readonly Mock<IEventStoreRepository> _eventStoreRepository;
         private readonly Mock<IAuditRepository> _auditRepository;
+        private ILogger<ProjectionProcessor> _logger;
 
         public ProjectionTest()
         {
             _projectionRepository = new Mock<IProjectionRepository>();
             _eventStoreRepository = new Mock<IEventStoreRepository>();
             _auditRepository = new Mock<IAuditRepository>();
+            _logger = new LoggerFactory().CreateLogger<ProjectionProcessor>();
         }
 
         [Fact]
@@ -49,13 +52,13 @@ namespace Tacta.EventStore.Test.Projector
 
             // When
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> {userProjection}, _eventStoreRepository.Object, _auditRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _auditRepository.Object, _logger);
             await processor.Process();
 
             // Then
             Assert.Equal(120, userProjection.GetSequence());
         }
-        
+
         [Fact]
         public async Task NoProjectionsAdded_ReturnsZero()
         {
@@ -79,7 +82,7 @@ namespace Tacta.EventStore.Test.Projector
 
             // When
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection>(), _eventStoreRepository.Object, _auditRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection>(), _eventStoreRepository.Object, _auditRepository.Object, _logger);
             await processor.Process();
 
             // Then
@@ -122,13 +125,13 @@ namespace Tacta.EventStore.Test.Projector
 
             // When
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _auditRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _auditRepository.Object, _logger);
             await processor.Process();
 
             // Then
             Assert.Equal(345, userProjection.GetSequence());
         }
-        
+
         [Fact]
         public async Task OnRebuildWithoutProcess()
         {
@@ -145,8 +148,8 @@ namespace Tacta.EventStore.Test.Projector
             });
 
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _auditRepository.Object);
-            
+            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _auditRepository.Object, _logger);
+
             // When
             await processor.Rebuild();
 
@@ -188,15 +191,15 @@ namespace Tacta.EventStore.Test.Projector
                 });
 
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _auditRepository.Object);
+            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _auditRepository.Object, _logger);
 
             _projectionRepository.Setup(p => p.GetSequenceAsync()).ReturnsAsync(() =>
             {
                 if (_projectionRepository.Invocations.Any(
                         i => i.Method.Name == nameof(_projectionRepository.Object.DeleteAllAsync)))
                     return 0;
-                
-                return userProjection.GetSequence(); 
+
+                return userProjection.GetSequence();
             });
 
             // When
@@ -241,17 +244,17 @@ namespace Tacta.EventStore.Test.Projector
                 });
 
             var userProjection = new UserProjection(_projectionRepository.Object);
-            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _auditRepository.Object);
-            
+            var processor = new ProjectionProcessor(new List<IProjection> { userProjection }, _eventStoreRepository.Object, _auditRepository.Object, _logger);
+
             _projectionRepository.Setup(p => p.GetSequenceAsync()).ReturnsAsync(() =>
             {
                 if (_projectionRepository.Invocations.Any(
                         i => i.Method.Name == nameof(_projectionRepository.Object.DeleteAllAsync)))
                     return 0;
-                
-                return userProjection.GetSequence(); 
+
+                return userProjection.GetSequence();
             });
-            
+
             // When
             await processor.Process();
             await processor.Rebuild();

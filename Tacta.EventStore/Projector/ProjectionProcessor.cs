@@ -27,12 +27,14 @@ namespace Tacta.EventStore.Projector
         public ProjectionProcessor(
             IEnumerable<IProjection> projections, 
             IEventStoreRepository eventStoreRepository, 
-            IAuditRepository auditRepository)
+            IAuditRepository auditRepository,
+            ILogger<ProjectionProcessor> logger)
         {
             _projections = projections;
             _eventStoreRepository = eventStoreRepository;
             _retryPolicy = new SqlServerResiliencePolicyBuilder().WithDefaults().BuildTransientErrorRetryPolicy();
             _auditRepository = auditRepository;
+            _logger = logger;
         }
 
         public async Task<string> Status(string service, int refreshRate = 5)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector;
@@ -19,12 +20,14 @@ namespace Tacta.EventStore.Test.Projector
         private Mock<IEventStoreRepository> _eventStoreRepository;
         private Mock<IProjectionRepository> _userProjectionRepository;
         private Mock<IAuditRepository> _auditRepository;
+        private ILogger<ProjectionProcessor> _logger;
 
         public ResilienceTest()
         {
             SetupProjectionRepository();
             SetupEventStoreRepository();
             SetupAuditRepository();
+            _logger = new LoggerFactory().CreateLogger<ProjectionProcessor>();
         }
 
         [Fact]
@@ -35,7 +38,7 @@ namespace Tacta.EventStore.Test.Projector
                 // Given
                 _userProjection = new UserProjection(_userProjectionRepository.Object);
                 var projections = new List<IProjection> { _userProjection };
-                var processor = new ProjectionProcessor(projections, _eventStoreRepository.Object, _auditRepository.Object);
+                var processor = new ProjectionProcessor(projections, _eventStoreRepository.Object, _auditRepository.Object, _logger);
 
                 // When
                 var numberOfProcessedEvents = await processor.Process().ConfigureAwait(false);
@@ -53,7 +56,7 @@ namespace Tacta.EventStore.Test.Projector
             // Given
             _userProjection = new VerySlowUserProjection(_userProjectionRepository.Object);
             var projections = new List<IProjection> { _userProjection };
-            var processor = new ProjectionProcessor(projections, _eventStoreRepository.Object, _auditRepository.Object);
+            var processor = new ProjectionProcessor(projections, _eventStoreRepository.Object, _auditRepository.Object, _logger);
 
             // When
             var processTask1 = processor.Process().ConfigureAwait(false);
