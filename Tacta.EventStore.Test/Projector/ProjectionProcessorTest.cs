@@ -17,6 +17,7 @@ using Tacta.EventStore.Test.Repository;
 using Tacta.EventStore.Test.Repository.DomainEvents;
 using Xunit;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 
 #if USE_SYSTEM_DATA_SQLCLIENT
     using System.Data.SqlClient;
@@ -200,6 +201,78 @@ namespace Tacta.EventStore.Test.Projector
             // Then
             count.Processed.Should().Be(3);
             count.Pivot.Should().Be(3L);
+        }
+
+        [Fact]
+        public async Task Process_WhenPesimisticProcessingEnabled_ShouldProcessEventsWithPesimisticProcessing()
+        {
+            // Given
+            var (aggregate, events) = CreateFooAggregateWithRegisteredEventsAndCreatedAt(DateTime.UtcNow);
+            await _eventStoreRepository.SaveAsync(aggregate, events);
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object, _logger);
+            
+            // When
+            var count = await processor.Process<DomainEvent>(pesimisticProcessing: true);
+            
+            // Then
+            count.Processed.Should().Be(3);
+        }
+
+        [Fact]
+        public async Task Process_WhenPesimisticProcessingEnabledAndDoesNotHaveAnyEvents_ShouldNotProcessAnyEvents()
+        {
+            // Given
+            var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object, _logger);
+
+            // When
+            var count = await processor.Process<DomainEvent>(pesimisticProcessing: true);
+
+            // Then
+            count.Processed.Should().Be(0);
+        }
+
+        [Fact]
+        public async Task Process_WhenPesimisticProcessingEnabledWithGapDetected_ShouldRetryUpToFiveTimes()
+        {
+            //Given
+            var callCount = 0;
+            var eventStoreRepositoryMock = new Mock<IEventStoreRepository>();
+            eventStoreRepositoryMock
+                .Setup(r => r.GetFromSequenceAsync<DomainEvent>(It.IsAny<long>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() =>
+                {
+                    callCount++;
+                    // First 5 calls: return a gap
+                    if (callCount <= 5)
+                    {
+                        return new List<EventStoreRecord<DomainEvent>>
+                        {
+                            new EventStoreRecord<DomainEvent> { Sequence = 1, Event = new FooRegistered("agg", "Description") },
+                            new EventStoreRecord<DomainEvent> { Sequence = 3, Event = new FooRegistered("agg", "Description") }
+                        };
+                    }
+                    // After 5 calls: return a complete sequence (no gap)
+                    return new List<EventStoreRecord<DomainEvent>>
+                    {
+                        new EventStoreRecord<DomainEvent> { Sequence = 1, Event = new FooRegistered("agg", "Description") },
+                        new EventStoreRecord<DomainEvent> { Sequence = 2, Event = new FooRegistered("agg", "Description") },
+                        new EventStoreRecord<DomainEvent> { Sequence = 3, Event = new FooRegistered("agg", "Description") }
+                    };
+                });
+
+            var processor = new ProjectionProcessor(
+                new List<IProjection> { _projectionMock.Object },
+                eventStoreRepositoryMock.Object,
+                _auditRepository.Object,
+                _logger);
+
+            // When
+            var result = await processor.Process<DomainEvent>(pesimisticProcessing: true);
+
+            // Then
+            callCount.Should().BeGreaterThanOrEqualTo(5);
+            result.Processed.Should().Be(3);
+            result.Pivot.Should().Be(3L);
         }
 
         private static SqlException GenerateRandomTransientSqlException()

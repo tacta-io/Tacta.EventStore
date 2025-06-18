@@ -179,12 +179,13 @@ namespace Tacta.EventStore.Projector
             IReadOnlyCollection<EventStoreRecord<T>> eventStoreRecords = null;
             bool retry = false;
             int retryCount = 0;
+
             do
             {
                 eventStoreRecords =
                 await _eventStoreRepository.GetFromSequenceAsync<T>(
                     _pivot, take).ConfigureAwait(false);
-                if (pessimisticProcessing)
+                if (pessimisticProcessing && eventStoreRecords.Any())
                 {
                     _logger.LogDebug("Pessimistic processing of event enabled. If gap between sequences is detected delay will occur. Load will be retried with 1 second delay until gape is resolved or limit of 5 retry is reached. After that processing will continue as usual.");
                     var maxSequence = eventStoreRecords.Max(x => x.Sequence);
@@ -194,7 +195,7 @@ namespace Tacta.EventStore.Projector
 
                     if (hasGap && retryCount < 5)
                     {
-                        _logger.LogWarning("Retry {retry}: Gap between sequences {MaxSequence} and {MinSequence} detected, expected distance should be {EventsCount}. Loading events will be delayed for 1 second",retryCount +1, maxSequence, minSequence, eventStoreRecords.Count);
+                        _logger.LogWarning("Retry {retry}: Gap between sequences {MaxSequence} and {MinSequence} detected, expected distance should be {EventsCount}. Loading events will be delayed for 1 second", retryCount +1, maxSequence, minSequence, eventStoreRecords.Count);
                         await Task.Delay(TimeSpan.FromSeconds(1));
                         retryCount++;
                         retry = true;
