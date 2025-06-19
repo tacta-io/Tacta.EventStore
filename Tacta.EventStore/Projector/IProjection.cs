@@ -13,5 +13,12 @@ namespace Tacta.EventStore.Projector
         long GetSequence();
 
         Task Rebuild();
+
+        Task Delete(string aggregateId);
+
+        /// <summary>
+        /// Applies the events to the projection without checking the sequence.
+        /// </summary>
+        Task ForceApply(IReadOnlyCollection<IDomainEvent> events);
     }
 }

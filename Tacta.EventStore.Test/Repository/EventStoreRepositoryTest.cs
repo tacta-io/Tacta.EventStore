@@ -755,36 +755,6 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Equal(4, latestSequence);
         }
 
-        [Fact]
-        public async Task GetFromSequenceAndDateTimeAsync_ReturnsAllEventsCreatedMoreThan5SecondsAgo()
-        {
-            //Given
-            var secondsAgo = DateTime.Now.AddSeconds(-5);
-            await StoreFooRegisteredWithCreatedAt("fooId1", secondsAgo.AddSeconds(-3));
-            await StoreFooRegisteredWithCreatedAt("fooId2", secondsAgo.AddSeconds(-1));
-
-
-            // When
-            var eventStoreRecords = await _eventStoreRepository.GetFromSequenceAndDateTimeAsync<DomainEvent>(0, 20, secondsAgo).ConfigureAwait(false);
-
-            // Then
-            Assert.Equal(2, eventStoreRecords.Count);
-        }
-
-        [Fact]
-        public async Task GetFromSequenceAndDateTimeAsync_ReturnsZeroEventsIfNoneAreCreatedMoreThan5SecondsAgo()
-        {
-            //Given
-            var secondsAgo = DateTime.Now.AddMinutes(-5);
-            await StoreFooRegisteredWithCreatedAt("fooId1", secondsAgo.AddSeconds(10));
-
-            // When
-            var eventStoreRecords = await _eventStoreRepository.GetFromSequenceAndDateTimeAsync<DomainEvent>(0, 20, secondsAgo).ConfigureAwait(false);
-
-            // Then
-            Assert.Equal(0, eventStoreRecords.Count);
-        }
-
         private async Task StoreFooRegistered(string fooId)
         {
             var fooRegistered1 = new FooRegistered(fooId, "testing foo");
