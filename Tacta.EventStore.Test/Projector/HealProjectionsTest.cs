@@ -64,8 +64,8 @@ namespace Tacta.EventStore.Test.Projector
             await healProjections.TryHeal(skippedSequences, default);
 
             // Then
-            _projection.Verify(x => x.ForceApply(It.IsAny<IReadOnlyList<IDomainEvent>>()), Times.Exactly(2));
-            _projection.Verify(x => x.Delete(It.IsAny<string>()), Times.Exactly(2));
+            _projection.Verify(x => x.ForceApply(It.IsAny<IReadOnlyList<IDomainEvent>>()), Times.Exactly(1));
+            _projection.Verify(x => x.Delete(It.IsAny<string>()), Times.Exactly(1));
             _auditRepository.Verify(x => x.SaveAsync(It.IsAny<long>(), It.IsAny<DateTime>()), Times.Exactly(4));
         }
 
@@ -125,6 +125,90 @@ namespace Tacta.EventStore.Test.Projector
             projectionMock.Verify(p => p.ForceApply(It.Is<IReadOnlyCollection<IDomainEvent>>(events =>
                events.Any(e => e.Sequence == 42)
             )), Times.Once);
+        }
+
+        [Fact]
+        public async Task TryHeal_WhenLoadAdditionalEventsReturnsDifferentAggregate_DeletesOnlyMainAggregate_ForceApplyCreatesMultipleRows()
+        {
+            // Given
+            var aggregateId1 = "agg-1";
+            var aggregateId2 = "agg-2";
+            var skippedSequences = new List<long> { 1 };
+
+            var eventStoreRepositoryMock = new Mock<IEventStoreRepository>();
+            var projectionMock = new Mock<IProjection>();
+            var auditRepositoryMock = new Mock<IAuditRepository>();
+
+            eventStoreRepositoryMock
+                .Setup(r => r.GetDistinctAggregateIds(skippedSequences, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<string> { aggregateId1 });
+
+            var domainEvents = new List<EventStoreRecord<DomainEvent>>
+            {
+                new EventStoreRecord<DomainEvent>
+                {
+                    AggregateId = aggregateId1,
+                    Sequence = 1,
+                    Version = 1,
+                    Event = new TestDomainEvent(aggregateId1)
+                }
+            };
+            eventStoreRepositoryMock
+                .Setup(r => r.GetAsync<DomainEvent>(aggregateId1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(domainEvents);
+
+            var additionalEvents = new List<EventStoreRecord<DomainEvent>>
+            {
+                new EventStoreRecord<DomainEvent>
+                {
+                    AggregateId = aggregateId2,
+                    Sequence = 2,
+                    Version = 1,
+                    Event = new TestDomainEvent(aggregateId2)
+                }
+            };
+
+            var healProjections = new TestHealProjections(
+                eventStoreRepositoryMock.Object,
+                new List<IProjection> { projectionMock.Object },
+                auditRepositoryMock.Object,
+                additionalEvents
+            );
+
+            // When
+            await healProjections.TryHeal(skippedSequences, CancellationToken.None);
+
+            // Then
+            projectionMock.Verify(p => p.Delete(aggregateId1), Times.Once);
+            projectionMock.Verify(p => p.Delete(aggregateId2), Times.Once);
+
+            projectionMock.Verify(p => p.ForceApply(It.Is<IReadOnlyCollection<IDomainEvent>>(events =>
+            events.Any(e => e is TestDomainEvent && ((TestDomainEvent)e).AggregateId == aggregateId1) &&
+            //events.Any(e => e is TestDomainEvent && ((TestDomainEvent)e).AggregateId == aggregateId2) &&
+            events.Count == 1
+        )), Times.Once);
+        }
+
+        private class TestDomainEvent : DomainEvent
+        {
+            public TestDomainEvent(string aggregateId) : base(aggregateId) { }
+        }
+
+        private class TestHealProjections : HealProjections
+        {
+            private readonly List<EventStoreRecord<DomainEvent>> _additionalEvents;
+            public TestHealProjections(
+                IEventStoreRepository eventStoreRepository,
+                IEnumerable<IProjection> projections,
+                IAuditRepository auditRepository,
+                List<EventStoreRecord<DomainEvent>> additionalEvents)
+                : base(eventStoreRepository, projections, auditRepository)
+            {
+                _additionalEvents = additionalEvents;
+            }
+
+            public override Task<List<EventStoreRecord<DomainEvent>>> LoadAdditionalEvents(string aggregateId)
+                => Task.FromResult(_additionalEvents);
         }
     }
 }

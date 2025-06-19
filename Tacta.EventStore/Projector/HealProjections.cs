@@ -29,21 +29,33 @@ namespace Tacta.EventStore.Projector
             //Fetch distinct aggregate ids by skipped sequences 
             var aggregateIds = await _eventStoreRepository.GetDistinctAggregateIds(skippedSequences, cancellationToken).ConfigureAwait(false);
 
+            var allEvents = new List<EventStoreRecord<DomainEvent>>();
+
             foreach (var aggregateId in aggregateIds)
             {
                 var domainEvents = (await _eventStoreRepository.GetAsync<DomainEvent>(aggregateId, cancellationToken).ConfigureAwait(false)).ToList();
-                domainEvents.ToList().ForEach(x => x.Event.WithVersionAndSequence(x.Version, x.Sequence));
-
+                domainEvents.ForEach(x => x.Event.WithVersionAndSequence(x.Version, x.Sequence));
                 domainEvents.AddRange(await LoadAdditionalEvents(aggregateId));
+                allEvents.AddRange(domainEvents);
+            }
 
-                var events = domainEvents.Select(x => (IDomainEvent)x.Event).OrderBy(e => e.Sequence).ToList().AsReadOnly();
+            var distinctAggregateIds = allEvents.Select(e => e.AggregateId).Distinct();
+
+            foreach (var aggregateId in distinctAggregateIds)
+            {
+                var eventsForAggregate = allEvents
+                    .Where(e => e.AggregateId == aggregateId)
+                    .Select(x => (IDomainEvent)x.Event)
+                    .OrderBy(e => e.Sequence)
+                    .ToList()
+                    .AsReadOnly();
 
                 foreach (var projection in _projections)
                 {
                     await projection.Delete(aggregateId);
-                    await projection.ForceApply(events);
+                    await projection.ForceApply(eventsForAggregate);
 
-                    foreach(var @event in events)
+                    foreach (var @event in eventsForAggregate)
                         await _auditRepository.SaveAsync(@event.Sequence, DateTime.Now);
                 }
             }
