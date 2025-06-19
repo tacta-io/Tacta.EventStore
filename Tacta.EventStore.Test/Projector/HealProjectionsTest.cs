@@ -8,6 +8,8 @@ using Tacta.EventStore.Projector;
 using Tacta.EventStore.Repository;
 using Tacta.EventStore.Test.Repository;
 using Xunit;
+using System.Linq;
+using Tacta.EventStore.Test.Projector.DomainEvents;
 
 namespace Tacta.EventStore.Test.Projector
 {
@@ -81,6 +83,48 @@ namespace Tacta.EventStore.Test.Projector
             _projection.Verify(x => x.ForceApply(It.IsAny<IReadOnlyList<IDomainEvent>>()), Times.Never);
             _projection.Verify(x => x.Delete(It.IsAny<string>()), Times.Never);
             _auditRepository.Verify(x => x.SaveAsync(It.IsAny<long>(), It.IsAny<DateTime>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task TryHeal_ShouldLoadEventsWithCorrectSequence()
+        {
+            // Given
+            var aggregateId = "agg-1";
+            var skippedSequences = new List<long> { 1, 2, 3 };
+
+            var eventStoreRepositoryMock = new Mock<IEventStoreRepository>();
+            var projectionMock = new Mock<IProjection>();
+            var auditRepositoryMock = new Mock<IAuditRepository>();
+
+            eventStoreRepositoryMock
+                .Setup(r => r.GetDistinctAggregateIds(skippedSequences, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<string> { aggregateId });
+
+            var domainEvents = new List<EventStoreRecord<DomainEvent>>
+            {
+                new EventStoreRecord<DomainEvent>
+                {
+                    AggregateId = aggregateId,
+                    Sequence = 42,
+                    Event = new UserRegistered(aggregateId, "Name", true)
+                }
+            };
+            eventStoreRepositoryMock
+                .Setup(r => r.GetAsync<DomainEvent>(aggregateId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(domainEvents);
+
+            // When
+            var healProjections = new HealProjections(
+                eventStoreRepositoryMock.Object,
+                new List<IProjection> { projectionMock.Object },
+                auditRepositoryMock.Object);
+
+            await healProjections.TryHeal(skippedSequences, CancellationToken.None);
+
+            // Then
+            projectionMock.Verify(p => p.ForceApply(It.Is<IReadOnlyCollection<IDomainEvent>>(events =>
+               events.Any(e => e.Sequence == 42)
+            )), Times.Once);
         }
     }
 }

@@ -32,6 +32,7 @@ namespace Tacta.EventStore.Projector
             foreach (var aggregateId in aggregateIds)
             {
                 var domainEvents = (await _eventStoreRepository.GetAsync<DomainEvent>(aggregateId, cancellationToken).ConfigureAwait(false)).ToList();
+                domainEvents.ToList().ForEach(x => x.Event.WithVersionAndSequence(x.Version, x.Sequence));
 
                 domainEvents.AddRange(await LoadAdditionalEvents(aggregateId));
 

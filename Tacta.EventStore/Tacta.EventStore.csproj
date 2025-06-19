@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.8.5-rc</Version>
-    <PackageVersion>1.8.5-rc</PackageVersion>
+    <Version>1.8.6-rc</Version>
+    <PackageVersion>1.8.6-rc</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Implement force apply</PackageReleaseNotes>
+    <PackageReleaseNotes>Add version and sequence to domain events</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
