@@ -62,7 +62,7 @@ namespace Tacta.EventStore.Test.Projector
             await healProjections.TryHeal(skippedSequences, default);
 
             // Then
-            _projection.Verify(x => x.Apply(It.IsAny<IReadOnlyList<IDomainEvent>>()), Times.Exactly(2));
+            _projection.Verify(x => x.ForceApply(It.IsAny<IReadOnlyList<IDomainEvent>>()), Times.Exactly(2));
             _projection.Verify(x => x.Delete(It.IsAny<string>()), Times.Exactly(2));
             _auditRepository.Verify(x => x.SaveAsync(It.IsAny<long>(), It.IsAny<DateTime>()), Times.Exactly(4));
         }
@@ -78,7 +78,7 @@ namespace Tacta.EventStore.Test.Projector
             await healProjections.TryHeal(skippedSequences, default);
             
             // Then
-            _projection.Verify(x => x.Apply(It.IsAny<IReadOnlyList<IDomainEvent>>()), Times.Never);
+            _projection.Verify(x => x.ForceApply(It.IsAny<IReadOnlyList<IDomainEvent>>()), Times.Never);
             _projection.Verify(x => x.Delete(It.IsAny<string>()), Times.Never);
             _auditRepository.Verify(x => x.SaveAsync(It.IsAny<long>(), It.IsAny<DateTime>()), Times.Never);
         }

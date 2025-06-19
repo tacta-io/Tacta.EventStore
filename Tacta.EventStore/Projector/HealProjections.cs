@@ -40,7 +40,7 @@ namespace Tacta.EventStore.Projector
                 foreach (var projection in _projections)
                 {
                     await projection.Delete(aggregateId);
-                    await projection.Apply(events);
+                    await projection.ForceApply(events);
 
                     foreach(var @event in events)
                         await _auditRepository.SaveAsync(@event.Sequence, DateTime.Now);
