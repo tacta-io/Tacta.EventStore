@@ -75,10 +75,10 @@ namespace Tacta.EventStore.Test.Projector
             // Given
             var skippedSequences = new List<long>();
             var healProjections = new HealProjections(_eventStoreRepository.Object, new List<IProjection> { _projection.Object }, _auditRepository.Object);
-            
+
             // When
             await healProjections.TryHeal(skippedSequences, default);
-            
+
             // Then
             _projection.Verify(x => x.ForceApply(It.IsAny<IReadOnlyList<IDomainEvent>>()), Times.Never);
             _projection.Verify(x => x.Delete(It.IsAny<string>()), Times.Never);
@@ -184,7 +184,6 @@ namespace Tacta.EventStore.Test.Projector
 
             projectionMock.Verify(p => p.ForceApply(It.Is<IReadOnlyCollection<IDomainEvent>>(events =>
             events.Any(e => e is TestDomainEvent && ((TestDomainEvent)e).AggregateId == aggregateId1) &&
-            //events.Any(e => e is TestDomainEvent && ((TestDomainEvent)e).AggregateId == aggregateId2) &&
             events.Count == 1
         )), Times.Once);
         }

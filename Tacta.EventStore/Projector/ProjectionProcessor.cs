@@ -25,8 +25,8 @@ namespace Tacta.EventStore.Projector
         private readonly SemaphoreSlim _processingSemaphore = new SemaphoreSlim(1, 1);
 
         public ProjectionProcessor(
-            IEnumerable<IProjection> projections, 
-            IEventStoreRepository eventStoreRepository, 
+            IEnumerable<IProjection> projections,
+            IEventStoreRepository eventStoreRepository,
             IAuditRepository auditRepository,
             ILogger<ProjectionProcessor> logger)
         {
@@ -62,7 +62,7 @@ namespace Tacta.EventStore.Projector
         public async Task<ProcessData> Process<T>(int take = 100, bool processParallel = false, bool auditEnabled = false, bool pesimisticProcessing = false) where T : IDomainEvent
         {
             var processed = 0;
-            
+
             await _retryPolicy.ExecuteAsync(async () =>
             {
                 if (!_isInitialized)
@@ -129,7 +129,7 @@ namespace Tacta.EventStore.Projector
         /// event that is missing is loaded.
         /// </param>
         /// <returns>The number of processed events.</returns>
-        public async Task<ProcessData> Process(int take = 100, bool processParallel = false, bool auditEnabled = false, bool pessimisticProcessing = false) 
+        public async Task<ProcessData> Process(int take = 100, bool processParallel = false, bool auditEnabled = false, bool pessimisticProcessing = false)
             => await Process<DomainEvent>(take, processParallel, auditEnabled, pessimisticProcessing);
 
         public async Task Rebuild(IEnumerable<Type> projectionTypes = null)
@@ -195,7 +195,7 @@ namespace Tacta.EventStore.Projector
 
                     if (hasGap && retryCount < 5)
                     {
-                        _logger.LogWarning("Retry {retry}: Gap between sequences {MaxSequence} and {MinSequence} detected, expected distance should be {EventsCount}. Loading events will be delayed for 1 second", retryCount +1, maxSequence, minSequence, eventStoreRecords.Count);
+                        _logger.LogWarning("Retry {retry}: Gap between sequences {MaxSequence} and {MinSequence} detected, expected distance should be {EventsCount}. Loading events will be delayed for 1 second", retryCount + 1, maxSequence, minSequence, eventStoreRecords.Count);
                         await Task.Delay(TimeSpan.FromSeconds(1));
                         retryCount++;
                         retry = true;
@@ -209,7 +209,7 @@ namespace Tacta.EventStore.Projector
             while (retry);
 
             eventStoreRecords.ToList().ForEach(x => x.Event.WithVersionAndSequence(x.Version, x.Sequence));
-            
+
             return eventStoreRecords.Select(x => (IDomainEvent)x.Event).ToList().AsReadOnly();
         }
 

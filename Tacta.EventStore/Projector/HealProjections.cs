@@ -61,7 +61,7 @@ namespace Tacta.EventStore.Projector
             }
         }
 
-        public virtual Task<List<EventStoreRecord<DomainEvent>>> LoadAdditionalEvents(string aggregateId) 
+        public virtual Task<List<EventStoreRecord<DomainEvent>>> LoadAdditionalEvents(string aggregateId)
             => Task.FromResult(new List<EventStoreRecord<DomainEvent>>());
     }
 }

@@ -45,7 +45,7 @@ namespace Tacta.EventStore.Test.Repository
             using var masterConnection = new SqlConnection(MasterConnectionString);
             masterConnection.Execute(createDatabase);
         }
-        
+
         private void CreateTables()
         {
             CreateEventStoreTable();

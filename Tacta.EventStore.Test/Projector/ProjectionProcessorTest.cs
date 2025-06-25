@@ -210,10 +210,10 @@ namespace Tacta.EventStore.Test.Projector
             var (aggregate, events) = CreateFooAggregateWithRegisteredEventsAndCreatedAt(DateTime.UtcNow);
             await _eventStoreRepository.SaveAsync(aggregate, events);
             var processor = new ProjectionProcessor(new List<IProjection> { _projectionMock.Object }, _eventStoreRepository, _auditRepository.Object, _logger);
-            
+
             // When
             var count = await processor.Process<DomainEvent>(pesimisticProcessing: true);
-            
+
             // Then
             count.Processed.Should().Be(3);
         }

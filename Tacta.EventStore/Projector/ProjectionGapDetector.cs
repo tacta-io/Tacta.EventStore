@@ -36,7 +36,7 @@ namespace Tacta.EventStore.Projector
                 return new List<long>();
 
             var skipped = await _auditRepository.DetectProjectionsGap(_pivot, sequenceEnd);
-            
+
             _pivot = sequenceEnd;
 
             return skipped;

@@ -81,10 +81,10 @@ namespace Tacta.EventStore.Repository
             CancellationToken cancellationToken = default)
         {
             if (aggregates == null || !aggregates.Any()) return;
-            
+
             if (aggregates.Any(a => a == null || a.AggregateRecord == null))
                 throw new InvalidAggregateRecordException("No Aggregate record can be null");
-            
+
             if (aggregates.Any(a => a.EventRecords == null || a.EventRecords.Any(r => r == null)))
                 throw new InvalidEventRecordException("Event record cannot be null");
 
@@ -106,14 +106,14 @@ namespace Tacta.EventStore.Repository
                 throw;
             }
         }
-        
+
         public async Task SaveAsync<T>(T aggregateRoot) where T : IAggregateRoot<IEntityId>
         {
             var aggregate = new Aggregate(aggregateRoot);
 
             await SaveAsync(aggregate.AggregateRecord, aggregate.EventRecords).ConfigureAwait(false);
         }
-        
+
         public async Task SaveAsync<T>(IEnumerable<T> aggregateRoots) where T : IAggregateRoot<IEntityId>
         {
             var aggregates = aggregateRoots.Select(ar => new Aggregate(ar)).ToList().AsReadOnly();
@@ -180,7 +180,7 @@ namespace Tacta.EventStore.Repository
                     .QueryFirstOrDefaultAsync<int>(StoredEvent.SelectLatestSequenceQuery)
                     .ConfigureAwait(false);
 
-            }, cancellationToken);                
+            }, cancellationToken);
         }
 
 

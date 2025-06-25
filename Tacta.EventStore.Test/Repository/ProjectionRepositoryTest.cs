@@ -8,7 +8,7 @@ using Xunit;
 namespace Tacta.EventStore.Test.Repository
 {
     public class ProjectionRepositoryTest : SqlBaseTest
-    {        
+    {
         private readonly UserProjectionRepository _projectionRepository;
 
         public ProjectionRepositoryTest()
