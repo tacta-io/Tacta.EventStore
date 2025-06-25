@@ -48,7 +48,7 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Equal(booCreated.CreatedAt.ToShortTimeString(), results.Single(x => x.AggregateId == booId).CreatedAt.ToShortTimeString());
             Assert.Equal(booCreated.Id, results.Single(x => x.AggregateId == booId).Id);
         }
-        
+
         [Fact]
         public async Task InsertAsync_GetAsync_SingleAggregate_WhenSavedAsCollection()
         {
@@ -95,20 +95,20 @@ namespace Tacta.EventStore.Test.Repository
             Assert.True(results.SingleOrDefault(x => x.Event is BacklogItemCreated) != null);
             Assert.True(results.SingleOrDefault(x => x.Event is SubTaskAdded) != null);
             Assert.True(results.All(x => x.AggregateId == aggregateId.ToString()));
-            
+
             var backlogItemCreated = results.Single(x => x.Event is BacklogItemCreated);
             Assert.Equal(
-                backlogItemCreated.CreatedAt.ToShortTimeString(), 
+                backlogItemCreated.CreatedAt.ToShortTimeString(),
                 aggregate.DomainEvents.Single(x => x is BacklogItemCreated).CreatedAt.ToShortTimeString());
-            
+
             var subTaskAdded = results.Single(x => x.Event is SubTaskAdded);
             Assert.Equal(
-                subTaskAdded.CreatedAt.ToShortTimeString(), 
+                subTaskAdded.CreatedAt.ToShortTimeString(),
                 aggregate.DomainEvents.Single(x => x is SubTaskAdded).CreatedAt.ToShortTimeString());
-            
+
             Assert.Equal(backlogItemCreated.Id, aggregate.DomainEvents.Single(x => x is BacklogItemCreated).Id);
             Assert.Equal(subTaskAdded.Id, aggregate.DomainEvents.Single(x => x is SubTaskAdded).Id);
-            
+
             Assert.True(results.SingleOrDefault(x => x.Version == 1) != default);
             Assert.True(results.SingleOrDefault(x => x.Version == 2) != default);
         }
@@ -132,7 +132,7 @@ namespace Tacta.EventStore.Test.Repository
 
             await _eventStoreRepository.SaveAsync(aggregateRecord, eventRecords).ConfigureAwait(false);
             transaction.Commit();
-            
+
             // Then
             var results = await _eventStoreRepository.GetAsync<DomainEvent>(booId).ConfigureAwait(false);
 
@@ -142,7 +142,7 @@ namespace Tacta.EventStore.Test.Repository
                 results.Single(x => x.AggregateId == booId).CreatedAt.ToShortTimeString());
             Assert.Equal(booCreated.Id, results.Single(x => x.AggregateId == booId).Id);
         }
-        
+
         [Fact]
         public async Task PassTransaction_InsertAsync_GetAsync_MultipleAggregates_WhenSavedAsCollection()
         {
@@ -172,7 +172,7 @@ namespace Tacta.EventStore.Test.Repository
             };
             var aggregate2 = new Aggregate(aggregateRecordBoo2, eventRecordsBoo2);
 
-            await _eventStoreRepository.SaveAsync(new []{aggregate1, aggregate2}).ConfigureAwait(false);
+            await _eventStoreRepository.SaveAsync(new[] { aggregate1, aggregate2 }).ConfigureAwait(false);
             transaction.Commit();
 
             // Then
@@ -182,7 +182,7 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Equal(booCreated1.CreatedAt.ToShortTimeString(),
                 results1.Single(x => x.AggregateId == booId1).CreatedAt.ToShortTimeString());
             Assert.Equal(booCreated1.Id, results1.Single(x => x.AggregateId == booId1).Id);
-            
+
             var results2 = await _eventStoreRepository.GetAsync<DomainEvent>(booId2).ConfigureAwait(false);
             Assert.Equal(1, results2.Count);
             Assert.Equal(booCreated2.GetType(), results2.Single(x => x.AggregateId == booId2).Event.GetType());
@@ -190,14 +190,14 @@ namespace Tacta.EventStore.Test.Repository
                 results2.Single(x => x.AggregateId == booId2).CreatedAt.ToShortTimeString());
             Assert.Equal(booCreated2.Id, results2.Single(x => x.AggregateId == booId2).Id);
         }
-        
+
         [Fact]
         public async Task PassTransaction_InsertAsync_GetAsync_SingleAggregateRoot()
         {
             using var connection = ConnectionFactory.Connection();
             connection.Open();
             var transaction = connection.BeginTransaction();
-            
+
             // Given
             var aggregateId = new BacklogItemId();
             var summary = "summary";
@@ -208,7 +208,7 @@ namespace Tacta.EventStore.Test.Repository
             // When
             await _eventStoreRepository.SaveAsync(aggregate).ConfigureAwait(false);
             transaction.Commit();
-            
+
             // Then
             var results = await _eventStoreRepository.GetAsync<DomainEvent>(aggregateId.ToString()).ConfigureAwait(false);
 
@@ -216,20 +216,20 @@ namespace Tacta.EventStore.Test.Repository
             Assert.True(results.SingleOrDefault(x => x.Event is BacklogItemCreated) != null);
             Assert.True(results.SingleOrDefault(x => x.Event is SubTaskAdded) != null);
             Assert.True(results.All(x => x.AggregateId == aggregateId.ToString()));
-            
+
             var backlogItemCreated = results.Single(x => x.Event is BacklogItemCreated);
             Assert.Equal(
-                backlogItemCreated.CreatedAt.ToShortTimeString(), 
+                backlogItemCreated.CreatedAt.ToShortTimeString(),
                 aggregate.DomainEvents.Single(x => x is BacklogItemCreated).CreatedAt.ToShortTimeString());
-            
+
             var subTaskAdded = results.Single(x => x.Event is SubTaskAdded);
             Assert.Equal(
-                subTaskAdded.CreatedAt.ToShortTimeString(), 
+                subTaskAdded.CreatedAt.ToShortTimeString(),
                 aggregate.DomainEvents.Single(x => x is SubTaskAdded).CreatedAt.ToShortTimeString());
-            
+
             Assert.Equal(backlogItemCreated.Id, aggregate.DomainEvents.Single(x => x is BacklogItemCreated).Id);
             Assert.Equal(subTaskAdded.Id, aggregate.DomainEvents.Single(x => x is SubTaskAdded).Id);
-            
+
             Assert.True(results.SingleOrDefault(x => x.Version == 1) != default);
             Assert.True(results.SingleOrDefault(x => x.Version == 2) != default);
         }
@@ -298,7 +298,7 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Equal(1, resultsBoo2.Count);
             Assert.Equal(booCreated2.GetType(), resultsBoo2.Single(x => x.AggregateId == booId2).Event.GetType());
         }
-        
+
         [Fact]
         public async Task InsertAsync_GetAsync_MultipleAggregates_WhenSavedAtOnce()
         {
@@ -325,7 +325,7 @@ namespace Tacta.EventStore.Test.Repository
             };
             var aggregate2 = new Aggregate(aggregateRecordBoo2, eventRecordsBoo2);
 
-            await _eventStoreRepository.SaveAsync(new []{aggregate1, aggregate2}).ConfigureAwait(false);
+            await _eventStoreRepository.SaveAsync(new[] { aggregate1, aggregate2 }).ConfigureAwait(false);
 
             // Then
             var resultsBoo1 = await _eventStoreRepository.GetAsync<DomainEvent>(booId1).ConfigureAwait(false);
@@ -445,7 +445,7 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Equal(1, results.First().Version);
             Assert.Equal(1, results.First().Sequence);
         }
-        
+
         [Fact]
         public async Task PropertiesCheck_WhenSavedAsAggregateRoot()
         {
@@ -501,7 +501,7 @@ namespace Tacta.EventStore.Test.Repository
             // Then
             await Assert.ThrowsAsync<ConcurrencyCheckException>(() => _eventStoreRepository.SaveAsync(aggregateRecord2, eventRecords2));
         }
-        
+
         [Fact]
         public async Task ConcurrencyCheck_WhenSavedAsAtOnce()
         {
@@ -537,11 +537,11 @@ namespace Tacta.EventStore.Test.Repository
             // Given
             var aggregateId = new BacklogItemId();
             var summary = "summary";
-            
+
             var aggregate1 = BacklogItem.FromSummary(aggregateId, summary);
 
             await _eventStoreRepository.SaveAsync(aggregate1).ConfigureAwait(false);
-            
+
             // When
             var aggregate2 = BacklogItem.FromSummary(aggregateId, summary);
 
@@ -572,7 +572,7 @@ namespace Tacta.EventStore.Test.Repository
             // Then
             Assert.Equal(count, eventStoreRecords.Count);
         }
-        
+
         [Theory]
         [InlineData(0, 50, 4)]
         [InlineData(1, 50, 3)]
@@ -611,7 +611,7 @@ namespace Tacta.EventStore.Test.Repository
             // Then
             Assert.Equal(2, eventStoreRecords.Count);
         }
-        
+
         [Fact]
         public async Task GetUntilSequence_WithSavedAsAggregateRoot_ShouldReturnAllAggregateEventStoreRecords()
         {
@@ -755,36 +755,6 @@ namespace Tacta.EventStore.Test.Repository
             Assert.Equal(4, latestSequence);
         }
 
-        [Fact]
-        public async Task GetFromSequenceAndDateTimeAsync_ReturnsAllEventsCreatedMoreThan5SecondsAgo()
-        {
-            //Given
-            var secondsAgo = DateTime.Now.AddSeconds(-5);
-            await StoreFooRegisteredWithCreatedAt("fooId1", secondsAgo.AddSeconds(-3));
-            await StoreFooRegisteredWithCreatedAt("fooId2", secondsAgo.AddSeconds(-1));
-
-
-            // When
-            var eventStoreRecords = await _eventStoreRepository.GetFromSequenceAndDateTimeAsync<DomainEvent>(0, 20, secondsAgo).ConfigureAwait(false);
-
-            // Then
-            Assert.Equal(2, eventStoreRecords.Count);
-        }
-
-        [Fact]
-        public async Task GetFromSequenceAndDateTimeAsync_ReturnsZeroEventsIfNoneAreCreatedMoreThan5SecondsAgo()
-        {
-            //Given
-            var secondsAgo = DateTime.Now.AddMinutes(-5);
-            await StoreFooRegisteredWithCreatedAt("fooId1", secondsAgo.AddSeconds(10));
-
-            // When
-            var eventStoreRecords = await _eventStoreRepository.GetFromSequenceAndDateTimeAsync<DomainEvent>(0, 20, secondsAgo).ConfigureAwait(false);
-
-            // Then
-            Assert.Equal(0, eventStoreRecords.Count);
-        }
-
         private async Task StoreFooRegistered(string fooId)
         {
             var fooRegistered1 = new FooRegistered(fooId, "testing foo");
@@ -797,12 +767,12 @@ namespace Tacta.EventStore.Test.Repository
 
             await _eventStoreRepository.SaveAsync(aggregateRecordFoo1, eventRecordsFoo1).ConfigureAwait(false);
         }
-        
+
         private async Task StoreBacklogItemCreated(BacklogItemId backlogItemId)
         {
             var summary = "summary";
             var aggregate = BacklogItem.FromSummary(backlogItemId, summary);
-            
+
             await _eventStoreRepository.SaveAsync(aggregate).ConfigureAwait(false);
         }
 
@@ -822,16 +792,16 @@ namespace Tacta.EventStore.Test.Repository
 
             return (booCreated.Id, booActivated.Id);
         }
-        
+
         private async Task<(Guid, Guid)> StoreBacklogItemCreatedAndSubTaskAdded(BacklogItemId backlogItemId)
         {
             var summary = "summary";
-            var subTaskTitle= "subTaskTitle";
+            var subTaskTitle = "subTaskTitle";
             var aggregate = BacklogItem.FromSummary(backlogItemId, summary);
             aggregate.AddTask(subTaskTitle);
 
             var ids = aggregate.DomainEvents.Select(x => x.Id).ToList();
-            
+
             await _eventStoreRepository.SaveAsync(aggregate).ConfigureAwait(false);
 
             return (ids[0], ids[1]);

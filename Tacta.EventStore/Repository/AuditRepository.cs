@@ -18,7 +18,7 @@ namespace Tacta.EventStore.Repository
 
         public async Task SaveAsync(long sequence, DateTime appliedAt)
         {
-            using(var connection = _connectionFactory.Connection())
+            using (var connection = _connectionFactory.Connection())
             {
                 var query = "IF NOT EXISTS (SELECT 1 FROM ProjectionsAuditLog WHERE Sequence = @Sequence) INSERT INTO ProjectionsAuditLog (Sequence, AppliedAt) VALUES (@Sequence, @AppliedAt)";
                 await connection.ExecuteAsync(query, new { Sequence = sequence, AppliedAt = appliedAt })

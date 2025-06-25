@@ -29,16 +29,26 @@ namespace Tacta.EventStore.Projector
             }
         }
 
+        public async Task ForceApply(IReadOnlyCollection<IDomainEvent> events)
+        {
+            foreach (var @event in events.OrderBy(x => x.Sequence))
+            {
+                await ((dynamic)this).On((dynamic)@event);
+            }
+        }
+
         public async Task Initialize() => _sequence = await _projectionRepository.GetSequenceAsync().ConfigureAwait(false);
 
         public async Task On(IDomainEvent @event) => await Task.FromResult(_sequence = @event.Sequence).ConfigureAwait(false);
 
         public long GetSequence() => _sequence;
-        
+
         public async Task Rebuild()
         {
             await _projectionRepository.DeleteAllAsync().ConfigureAwait(false);
             await Initialize().ConfigureAwait(false);
         }
+
+        public abstract Task Delete(string aggregateId);
     }
 }

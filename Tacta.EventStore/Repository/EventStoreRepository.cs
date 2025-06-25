@@ -81,10 +81,10 @@ namespace Tacta.EventStore.Repository
             CancellationToken cancellationToken = default)
         {
             if (aggregates == null || !aggregates.Any()) return;
-            
+
             if (aggregates.Any(a => a == null || a.AggregateRecord == null))
                 throw new InvalidAggregateRecordException("No Aggregate record can be null");
-            
+
             if (aggregates.Any(a => a.EventRecords == null || a.EventRecords.Any(r => r == null)))
                 throw new InvalidEventRecordException("Event record cannot be null");
 
@@ -106,14 +106,14 @@ namespace Tacta.EventStore.Repository
                 throw;
             }
         }
-        
+
         public async Task SaveAsync<T>(T aggregateRoot) where T : IAggregateRoot<IEntityId>
         {
             var aggregate = new Aggregate(aggregateRoot);
 
             await SaveAsync(aggregate.AggregateRecord, aggregate.EventRecords).ConfigureAwait(false);
         }
-        
+
         public async Task SaveAsync<T>(IEnumerable<T> aggregateRoots) where T : IAggregateRoot<IEntityId>
         {
             var aggregates = aggregateRoots.Select(ar => new Aggregate(ar)).ToList().AsReadOnly();
@@ -180,8 +180,10 @@ namespace Tacta.EventStore.Repository
                     .QueryFirstOrDefaultAsync<int>(StoredEvent.SelectLatestSequenceQuery)
                     .ConfigureAwait(false);
 
-            }, cancellationToken);                
+            }, cancellationToken);
         }
+
+
 
         public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string query, object param, CancellationToken cancellationToken = default)
         {
@@ -205,18 +207,28 @@ namespace Tacta.EventStore.Repository
             }, cancellationToken);
         }
 
-        public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetFromSequenceAndDateTimeAsync<T>(long sequence, int? take = null, DateTime? secondsAgo = null, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<string>> GetDistinctAggregateIds(List<long> sequences, CancellationToken cancellationToken = default)
         {
-            if (sequence < 0)
-                throw new InvalidSequenceException("Sequence cannot be less the zero");
+            const int BatchSize = 1000; // Safe batch size for SQL Server IN clause
+            var result = new HashSet<string>();
 
-            var query = take.HasValue
-                ? StoredEvent.SelectChunkedWithLimitAndSecondsAgoQuery
-                : StoredEvent.SelectChunkedWithSecondsAgoAndWithoutLimitQuery;
+            for (int i = 0; i < sequences.Count; i += BatchSize)
+            {
+                var batch = sequences.Skip(i).Take(BatchSize).ToList();
+                var batchResult = await _sqlConnectionFactory.ExecuteWithTransactionIfExists(async (connection, transaction) =>
+                {
+                    return await connection.QueryAsync<string>(
+                        StoredEvent.SelectAggregateIdBySequenceQuery,
+                        new { Sequences = batch },
+                        transaction: transaction
+                    ).ConfigureAwait(false);
+                }, cancellationToken);
 
-            var param = new { Sequence = sequence, Take = take, SecondsAgo = secondsAgo };
+                foreach (var id in batchResult)
+                    result.Add(id);
+            }
 
-            return await GetAsync<T>(query, param, cancellationToken).ConfigureAwait(false);
+            return result;
         }
     }
 }

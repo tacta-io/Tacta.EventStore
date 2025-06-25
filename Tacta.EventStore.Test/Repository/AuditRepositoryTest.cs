@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Tacta.EventStore.Test.Repository
 {
-    public class AuditRepositoryTest: SqlBaseTest
+    public class AuditRepositoryTest : SqlBaseTest
     {
         private readonly IAuditRepository _auditRepository;
 

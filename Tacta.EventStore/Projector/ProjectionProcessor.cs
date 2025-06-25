@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Polly.Retry;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector.Models;
@@ -17,17 +18,23 @@ namespace Tacta.EventStore.Projector
         private readonly IEnumerable<IProjection> _projections;
         private readonly IEventStoreRepository _eventStoreRepository;
         private readonly IAuditRepository _auditRepository;
+        private readonly ILogger<ProjectionProcessor> _logger;
         private readonly AsyncRetryPolicy _retryPolicy;
         private bool _isInitialized;
         private long _pivot;
         private readonly SemaphoreSlim _processingSemaphore = new SemaphoreSlim(1, 1);
 
-        public ProjectionProcessor(IEnumerable<IProjection> projections, IEventStoreRepository eventStoreRepository, IAuditRepository auditRepository)
+        public ProjectionProcessor(
+            IEnumerable<IProjection> projections,
+            IEventStoreRepository eventStoreRepository,
+            IAuditRepository auditRepository,
+            ILogger<ProjectionProcessor> logger)
         {
             _projections = projections;
             _eventStoreRepository = eventStoreRepository;
             _retryPolicy = new SqlServerResiliencePolicyBuilder().WithDefaults().BuildTransientErrorRetryPolicy();
             _auditRepository = auditRepository;
+            _logger = logger;
         }
 
         public async Task<string> Status(string service, int refreshRate = 5)
@@ -55,7 +62,7 @@ namespace Tacta.EventStore.Projector
         public async Task<ProcessData> Process<T>(int take = 100, bool processParallel = false, bool auditEnabled = false, bool pesimisticProcessing = false) where T : IDomainEvent
         {
             var processed = 0;
-            
+
             await _retryPolicy.ExecuteAsync(async () =>
             {
                 if (!_isInitialized)
@@ -64,11 +71,14 @@ namespace Tacta.EventStore.Projector
                 await _processingSemaphore.WaitAsync().ConfigureAwait(false);
                 try
                 {
+                    _logger.LogDebug("Loading {Take} events.", take);
                     var events = await Load<T>(take, pesimisticProcessing).ConfigureAwait(false);
 
                     if (auditEnabled)
                     {
+                        _logger.LogDebug("Audit is enabled. Writing processed events in database.");
                         await AuditEventsAsync(events).ConfigureAwait(false);
+                        _logger.LogDebug("Writing processed events in database finished");
                     }
 
                     if (processParallel)
@@ -115,14 +125,12 @@ namespace Tacta.EventStore.Projector
         /// Enables tracking of event processing for auditing purposes. Default is false.
         /// </param>
         /// <param name="pesimisticProcessing">
-        /// If true, only events older than a short threshold (e.g., 5 seconds) are loaded for processing.
-        /// This helps avoid processing events that may still be in-flight or uncommitted. Default is false.
+        /// If true - loaded events will be checked for gaps in sequence. If gap is detected events will be reloaded 5 times with 1 second delay between loads unless 
+        /// event that is missing is loaded.
         /// </param>
         /// <returns>The number of processed events.</returns>
-        public async Task<ProcessData> Process(int take = 100, bool processParallel = false, bool auditEnabled = false, bool pesimisticProcessing = false)
-        {
-            return await Process<DomainEvent>(take, processParallel, auditEnabled, pesimisticProcessing);
-        }
+        public async Task<ProcessData> Process(int take = 100, bool processParallel = false, bool auditEnabled = false, bool pessimisticProcessing = false)
+            => await Process<DomainEvent>(take, processParallel, auditEnabled, pessimisticProcessing);
 
         public async Task Rebuild(IEnumerable<Type> projectionTypes = null)
         {
@@ -166,16 +174,42 @@ namespace Tacta.EventStore.Projector
             _isInitialized = true;
         }
 
-        private async Task<IReadOnlyCollection<IDomainEvent>> Load<T>(int take, bool pesimisticProcessing = false) where T : IDomainEvent
+        private async Task<IReadOnlyCollection<IDomainEvent>> Load<T>(int take, bool pessimisticProcessing = false) where T : IDomainEvent
         {
-            IReadOnlyCollection<EventStoreRecord<T>> eventStoreRecords = pesimisticProcessing
-                ? await _eventStoreRepository.GetFromSequenceAndDateTimeAsync<T>(
-                    _pivot, take, DateTime.Now.AddSeconds(-5)).ConfigureAwait(false)
-                : await _eventStoreRepository.GetFromSequenceAsync<T>(
+            IReadOnlyCollection<EventStoreRecord<T>> eventStoreRecords = null;
+            bool retry = false;
+            int retryCount = 0;
+
+            do
+            {
+                eventStoreRecords =
+                await _eventStoreRepository.GetFromSequenceAsync<T>(
                     _pivot, take).ConfigureAwait(false);
+                if (pessimisticProcessing && eventStoreRecords.Any())
+                {
+                    _logger.LogDebug("Pessimistic processing of event enabled. If gap between sequences is detected delay will occur. Load will be retried with 1 second delay until gape is resolved or limit of 5 retry is reached. After that processing will continue as usual.");
+                    var maxSequence = eventStoreRecords.Max(x => x.Sequence);
+                    var minSequence = eventStoreRecords.Min(x => x.Sequence);
+
+                    bool hasGap = (maxSequence - minSequence + 1) != eventStoreRecords.Count;
+
+                    if (hasGap && retryCount < 5)
+                    {
+                        _logger.LogWarning("Retry {retry}: Gap between sequences {MaxSequence} and {MinSequence} detected, expected distance should be {EventsCount}. Loading events will be delayed for 1 second", retryCount + 1, maxSequence, minSequence, eventStoreRecords.Count);
+                        await Task.Delay(TimeSpan.FromSeconds(1));
+                        retryCount++;
+                        retry = true;
+                    }
+                    else
+                    {
+                        retry = false;
+                    }
+                }
+            }
+            while (retry);
 
             eventStoreRecords.ToList().ForEach(x => x.Event.WithVersionAndSequence(x.Version, x.Sequence));
-            
+
             return eventStoreRecords.Select(x => (IDomainEvent)x.Event).ToList().AsReadOnly();
         }
 

@@ -1,4 +1,5 @@
-﻿using Tacta.Connection;
+﻿using System.Threading.Tasks;
+using Tacta.Connection;
 using Tacta.EventStore.Repository;
 
 namespace Tacta.EventStore.Test.Repository.Repositories

@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tacta.EventStore.Repository;
 using Tacta.EventStore.Repository.Exceptions;
@@ -30,21 +30,16 @@ namespace Tacta.EventStore.Projector
         /// <exception cref="ProjectionGapException">
         /// Thrown when skipped projections are detected, indicating that some events have not been projected.
         /// </exception>
-        public async Task DetectGap(long sequenceEnd)
+        public async Task<List<long>> DetectGap(long sequenceEnd)
         {
             if (_pivot >= sequenceEnd)
-                return;
+                return new List<long>();
 
             var skipped = await _auditRepository.DetectProjectionsGap(_pivot, sequenceEnd);
 
-            if (skipped.Any())
-            {
-                throw new ProjectionGapException(
-                    $"Skipped projections detected: {string.Join(", ", skipped)}. " +
-                    "Please rebuild the projections to ensure consistency.");
-            }
-
             _pivot = sequenceEnd;
+
+            return skipped;
         }
     }
 }
