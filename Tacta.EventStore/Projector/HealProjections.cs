@@ -39,12 +39,10 @@ namespace Tacta.EventStore.Projector
                 allEvents.AddRange(domainEvents);
             }
 
-            var distinctAggregateIds = allEvents.Select(e => e.AggregateId).Distinct();
-
-            foreach (var aggregateId in distinctAggregateIds)
+            foreach (var group in allEvents.GroupBy(e => e.AggregateId))
             {
-                var eventsForAggregate = allEvents
-                    .Where(e => e.AggregateId == aggregateId)
+                var aggregateId = group.Key;
+                var eventsForAggregate = group
                     .Select(x => (IDomainEvent)x.Event)
                     .OrderBy(e => e.Sequence)
                     .ToList()
