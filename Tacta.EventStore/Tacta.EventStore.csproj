@@ -15,10 +15,8 @@
     <Version>1.9.0</Version>
     <PackageVersion>1.9.0</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>
-		Added autoheal functionality: Projections are now automatically repaired when gaps in event sequences are detected, ensuring projection consistency and reliability.
-		Improved pessimistic processing: Event loading now checks for sequence gaps and retries up to 5 times with delays, reducing the risk of processing incomplete event batches and improving data integrity.
-	</PackageReleaseNotes>
+    <PackageReleaseNotes>Added autoheal functionality: Projections are now automatically repaired when gaps in event sequences are detected, ensuring projection consistency and reliability.
+	Improved pessimistic processing: Event loading now checks for sequence gaps and retries up to 5 times with delays, reducing the risk of processing incomplete event batches and improving data integrity.</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
