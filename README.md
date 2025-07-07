@@ -9,7 +9,7 @@
 The package consists of three separate parts that can be used independently of each other:
 - ``` Repository ``` SQL event store based on Dapper for loading and storing domain events, handling aggregate versions with optimistic concurrency checks
 - ``` Domain ``` Domain-driven design tactical helpers for creating domain events, rehydrating aggregates, comparing value objects, handling entities and their identities
-- ``` Projector ``` A simple mechanism for handling projections of domain events and populating read models including retry policies and parallel execution
+- ``` Projector ``` A simple mechanism for handling projections of domain events and populating read models including retry policies, parallel execution, audit logging and optional pessimistic processing for gap detection
 
  ## Check out [Tactify](https://github.com/tacta-io/Tactify), our example app implemented with Tacta.EventStore
 
@@ -190,5 +190,85 @@ Create a new worker background service and invoke ``` Tacta.EventStore.Projector
 **Warning!** Having multiple instances of projection worker is not tested yet. We can not guarantee read models will be populated as expected in case multiple instances are deployed. This feature is still in progress.
 
 
+### How to use pesimistic processing for projections?
 
+The ProjectionProcessor supports a pessimistic processing mode to ensure that event sequences are applied to projections without missing any events. 
+When enabled, the processor checks for gaps in the sequence numbers of loaded events. 
+If a gap is detected, it will retry loading the events up to 5 times, waiting 1 second between each attempt. 
+This helps ensure that all events are processed in strict order.
+To enable pessimistic processing, set the `PessimisticProcessing` property to `true` when configuring the `ProjectionProcessor`.
+
+```c#
+   await _projectionProcessor.Process(
+        batchSize: 500,
+        processParallel: true,
+        auditEnabled: false,
+        pessimisticProcessing: true // enable gap detection and retry
+    ).ConfigureAwait(false);
+
+```
+
+
+### How to use audit logging for projections?
+
+The ProjectionProcessor supports an audit logging feature that tracks which events have been processed by projections. 
+When audit is enabled, an entry is written to the audit repository for each processed event, recording the event’s sequence number and the timestamp when it was applied. 
+This provides a reliable way to monitor projection progress, detect missing events, and support troubleshooting or compliance requirements.
+
+To enable audit logging, set the `AuditEnabled` property to `true` when configuring the `ProjectionProcessor`.
+```c#
+   await _projectionProcessor.Process(
+        batchSize: 500,
+        processParallel: true,
+        auditEnabled: true // enable audit logging
+    ).ConfigureAwait(false);
+```
+
+
+### How to use gap detection for projections?
+
+The `DetectProjectionsGap` method allows you to check for missing events in your projections.
+It queries the `EventStore` for all sequence numbers in a given range, then left-joins with the `ProjectionsAuditLog` to find which sequences have not been logged as projected.
+The result is a list of sequence numbers that are present in the event store but missing from the audit log — these are the events that have not yet been projected.
+
+  - Enable audit logging
+  - Detect gaps by calling `DetectProjectionsGap` with the desired sequence range:
+
+``` c#
+var gaps = await _projectionProcessor.DetectProjectionsGap(1, 1000).ConfigureAwait(false);
+if (gaps.Any())
+{
+    // Handle gaps, e.g., log them or trigger a reprocessing of the missing events
+}
+```
+
+
+### How to auto-heal projections?
+
+The HealProjections class provides an auto-healing mechanism for your projections, allowing you to automatically recover from missed or skipped events in your read models. 
+This is especially useful when gaps are detected in the projection audit log, ensuring your projections remain consistent with the event store.      
+      
+  1. Gap Detection:
+     Use the `DetectProjectionsGap` method to find missing event sequences that have not been projected.    
+  
+  2. Healing Process:
+     Pass the list of missing (skipped) sequence numbers to the `HealProjections.TryHeal` method. The healing process works as follows:
+       • It fetches the aggregate IDs associated with the missing sequences.
+       • For each affected aggregate, it loads all related events from the event store.
+       • It optionally loads additional events if needed (the method can be overridden for custom logic).
+       • For each projection:
+           • The read model rows associated with the affected aggregate are deleted.
+           • All events for the aggregate are re-applied using the ForceApply method, which applies events without sequence checks.
+           • Each event is re-audited by saving its sequence and timestamp to the audit log.
+
+Suppose you have detected gaps in your projections:
+    
+```c#
+    List<long> missingSequences = await _auditRepository.DetectProjectionsGap(1000, 2000);
+
+    if (missingSequences.Any())
+    {
+        await _healProjections.TryHeal(missingSequences, CancellationToken.None);
+    }
+```
 
