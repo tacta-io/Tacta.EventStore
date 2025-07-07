@@ -9,7 +9,7 @@
 The package consists of three separate parts that can be used independently of each other:
 - ``` Repository ``` SQL event store based on Dapper for loading and storing domain events, handling aggregate versions with optimistic concurrency checks
 - ``` Domain ``` Domain-driven design tactical helpers for creating domain events, rehydrating aggregates, comparing value objects, handling entities and their identities
-- ``` Projector ``` A simple mechanism for handling projections of domain events and populating read models including retry policies, parallel execution, audit logging and optional pessimistic processing for gap detection
+- ``` Projector ``` A simple mechanism for handling projections of domain events and populating read models including retry policies, parallel execution, and optional audit logging and pessimistic processing
 
  ## Check out [Tactify](https://github.com/tacta-io/Tactify), our example app implemented with Tacta.EventStore
 
