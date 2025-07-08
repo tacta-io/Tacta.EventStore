@@ -12,11 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.9.0</Version>
-    <PackageVersion>1.9.0</PackageVersion>
+    <Version>1.9.1</Version>
+    <PackageVersion>1.9.1</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Added autoheal functionality: Projections are now automatically repaired when gaps in event sequences are detected, ensuring projection consistency and reliability.
-	Improved pessimistic processing: Event loading now checks for sequence gaps and retries up to 5 times with delays, reducing the risk of processing incomplete event batches and improving data integrity.</PackageReleaseNotes>
+    <PackageReleaseNotes>Update readme file</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
