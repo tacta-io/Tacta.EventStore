@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.9.1</Version>
-    <PackageVersion>1.9.1</PackageVersion>
+    <Version>1.9.2</Version>
+    <PackageVersion>1.9.2</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Update readme file</PackageReleaseNotes>
+    <PackageReleaseNotes>Added logic to reduce the frequency of audit log checks in projection gap detection, improving performance by checking for missing projections every other invocation.</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
