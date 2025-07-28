@@ -13,7 +13,7 @@ namespace Tacta.EventStore.Projector
     {
         private readonly IAuditRepository _auditRepository;
         private long _pivot;
-
+        private bool checkAuditForSkippedEvents = false;
         public ProjectionGapDetector(IAuditRepository auditRepository)
         {
             _auditRepository = auditRepository;
@@ -35,11 +35,19 @@ namespace Tacta.EventStore.Projector
             if (_pivot >= sequenceEnd)
                 return new List<long>();
 
-            var skipped = await _auditRepository.DetectProjectionsGap(_pivot, sequenceEnd);
+            if (checkAuditForSkippedEvents)
+            {
+                var skipped = await _auditRepository.DetectProjectionsGap(_pivot, sequenceEnd);
 
-            _pivot = sequenceEnd;
+                _pivot = sequenceEnd;
 
-            return skipped;
+                return skipped;
+            }
+
+            // skip audit this time, try again on next iteration
+            checkAuditForSkippedEvents = !checkAuditForSkippedEvents;
+
+            return new List<long>();
         }
     }
 }
