@@ -1,15 +1,15 @@
-﻿using Moq;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Moq;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Projector;
 using Tacta.EventStore.Repository;
+using Tacta.EventStore.Test.Projector.DomainEvents;
 using Tacta.EventStore.Test.Repository;
 using Xunit;
-using System.Linq;
-using Tacta.EventStore.Test.Projector.DomainEvents;
 
 namespace Tacta.EventStore.Test.Projector
 {
@@ -32,8 +32,8 @@ namespace Tacta.EventStore.Test.Projector
             // Given
             var skippedSequences = new List<long> { 1, 2, 3 };
             var healProjections = new HealProjections(_eventStoreRepository.Object, new List<IProjection> { _projection.Object }, _auditRepository.Object);
-            _eventStoreRepository.Setup(x => x.GetDistinctAggregateIds(skippedSequences, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<string> { "aggregate1", "aggregate2" });
+            _eventStoreRepository.Setup(x => x.GetDistinctAggregateIdsWithSequence(skippedSequences, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<(string, long)> { ("aggregate1", 2), ("aggregate2", 3) });
             var sampleEvents = new List<EventStoreRecord<DomainEvent>>
             {
                 new EventStoreRecord<DomainEvent>
@@ -97,8 +97,8 @@ namespace Tacta.EventStore.Test.Projector
             var auditRepositoryMock = new Mock<IAuditRepository>();
 
             eventStoreRepositoryMock
-                .Setup(r => r.GetDistinctAggregateIds(skippedSequences, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<string> { aggregateId });
+                .Setup(r => r.GetDistinctAggregateIdsWithSequence(skippedSequences, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<(string, long)> { (aggregateId, 3) });
 
             var domainEvents = new List<EventStoreRecord<DomainEvent>>
             {
@@ -140,8 +140,8 @@ namespace Tacta.EventStore.Test.Projector
             var auditRepositoryMock = new Mock<IAuditRepository>();
 
             eventStoreRepositoryMock
-                .Setup(r => r.GetDistinctAggregateIds(skippedSequences, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<string> { aggregateId1 });
+                .Setup(r => r.GetDistinctAggregateIdsWithSequence(skippedSequences, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<(string, long)> { (aggregateId1, 1) });
 
             var domainEvents = new List<EventStoreRecord<DomainEvent>>
             {
@@ -206,7 +206,7 @@ namespace Tacta.EventStore.Test.Projector
                 _additionalEvents = additionalEvents;
             }
 
-            public override Task<List<EventStoreRecord<DomainEvent>>> LoadAdditionalEvents(string aggregateId)
+            public override Task<List<EventStoreRecord<DomainEvent>>> LoadAdditionalEvents(string aggregateId, long? sequence = null)
                 => Task.FromResult(_additionalEvents);
         }
     }

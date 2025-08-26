@@ -49,7 +49,7 @@ namespace Tacta.EventStore.Repository
         public static string SelectLatestSequenceQuery =
             @"SELECT MAX ([Sequence]) FROM [dbo].[EventStore]";
 
-        public static string SelectAggregateIdBySequenceQuery =
-            @"SELECT DISTINCT [AggregateId] FROM [dbo].[EventStore] WHERE [Sequence] in @Sequences";
+        public static string SelectAggregateIdWithSequenceBySequenceQuery =
+            @"SELECT [AggregateId], MAX([Sequence]) FROM [dbo].[EventStore] WHERE [Sequence] in @Sequences GROUP BY [AggregateId]";
     }
 }

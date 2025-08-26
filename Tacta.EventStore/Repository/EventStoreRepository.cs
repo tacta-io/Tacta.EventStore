@@ -207,18 +207,18 @@ namespace Tacta.EventStore.Repository
             }, cancellationToken);
         }
 
-        public async Task<IEnumerable<string>> GetDistinctAggregateIds(List<long> sequences, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<(string, long)>> GetDistinctAggregateIdsWithSequence(List<long> sequences, CancellationToken cancellationToken = default)
         {
             const int BatchSize = 1000; // Safe batch size for SQL Server IN clause
-            var result = new HashSet<string>();
+            var result = new HashSet<(string, long)>();
 
             for (int i = 0; i < sequences.Count; i += BatchSize)
             {
                 var batch = sequences.Skip(i).Take(BatchSize).ToList();
                 var batchResult = await _sqlConnectionFactory.ExecuteWithTransactionIfExists(async (connection, transaction) =>
                 {
-                    return await connection.QueryAsync<string>(
-                        StoredEvent.SelectAggregateIdBySequenceQuery,
+                    return await connection.QueryAsync<(string AggregateId, long Sequence)>(
+                        StoredEvent.SelectAggregateIdWithSequenceBySequenceQuery,
                         new { Sequences = batch },
                         transaction: transaction
                     ).ConfigureAwait(false);
