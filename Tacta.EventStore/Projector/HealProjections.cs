@@ -59,7 +59,7 @@ namespace Tacta.EventStore.Projector
             }
         }
 
-        public virtual Task<List<EventStoreRecord<DomainEvent>>> LoadAdditionalEvents(string aggregateId, long? sequence = null)
+        public virtual Task<List<EventStoreRecord<DomainEvent>>> LoadAdditionalEvents(string aggregateId, long sequence)
             => Task.FromResult(new List<EventStoreRecord<DomainEvent>>());
     }
 }

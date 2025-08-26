@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.9.3</Version>
-    <PackageVersion>1.9.3</PackageVersion>
+    <Version>1.9.4</Version>
+    <PackageVersion>1.9.4</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Added logic to fetch sequences along with aggregateIds when healing projections and loading additional events.</PackageReleaseNotes>
+    <PackageReleaseNotes>Changed LoadAdditional Events signature</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
