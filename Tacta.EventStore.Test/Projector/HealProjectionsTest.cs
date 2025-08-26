@@ -206,7 +206,7 @@ namespace Tacta.EventStore.Test.Projector
                 _additionalEvents = additionalEvents;
             }
 
-            public override Task<List<EventStoreRecord<DomainEvent>>> LoadAdditionalEvents(string aggregateId, long? sequence = null)
+            public override Task<List<EventStoreRecord<DomainEvent>>> LoadAdditionalEvents(string aggregateId, long sequence)
                 => Task.FromResult(_additionalEvents);
         }
     }
