@@ -6,6 +6,6 @@ namespace Tacta.EventStore.Projector
 {
     public interface IHealProjections
     {
-        Task TryHeal(List<long> skippedSequences, CancellationToken cancellationToken);
+        Task TryHeal(List<long> skippedSequences, long pivot, CancellationToken cancellationToken);
     }
 }

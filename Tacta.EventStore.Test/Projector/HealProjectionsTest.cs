@@ -61,7 +61,7 @@ namespace Tacta.EventStore.Test.Projector
                 .Returns(Task.CompletedTask);
 
             // When
-            await healProjections.TryHeal(skippedSequences, default);
+            await healProjections.TryHeal(skippedSequences, 11, default);
 
             // Then
             _projection.Verify(x => x.ForceApply(It.IsAny<IReadOnlyList<IDomainEvent>>()), Times.Exactly(1));
@@ -77,7 +77,7 @@ namespace Tacta.EventStore.Test.Projector
             var healProjections = new HealProjections(_eventStoreRepository.Object, new List<IProjection> { _projection.Object }, _auditRepository.Object);
 
             // When
-            await healProjections.TryHeal(skippedSequences, default);
+            await healProjections.TryHeal(skippedSequences, 10, default);
 
             // Then
             _projection.Verify(x => x.ForceApply(It.IsAny<IReadOnlyList<IDomainEvent>>()), Times.Never);
@@ -119,7 +119,7 @@ namespace Tacta.EventStore.Test.Projector
                 new List<IProjection> { projectionMock.Object },
                 auditRepositoryMock.Object);
 
-            await healProjections.TryHeal(skippedSequences, CancellationToken.None);
+            await healProjections.TryHeal(skippedSequences, 42, CancellationToken.None);
 
             // Then
             projectionMock.Verify(p => p.ForceApply(It.Is<IReadOnlyCollection<IDomainEvent>>(events =>
@@ -176,7 +176,7 @@ namespace Tacta.EventStore.Test.Projector
             );
 
             // When
-            await healProjections.TryHeal(skippedSequences, CancellationToken.None);
+            await healProjections.TryHeal(skippedSequences, 2, CancellationToken.None);
 
             // Then
             projectionMock.Verify(p => p.Delete(aggregateId1), Times.Once);
@@ -206,7 +206,7 @@ namespace Tacta.EventStore.Test.Projector
                 _additionalEvents = additionalEvents;
             }
 
-            public override Task<List<EventStoreRecord<DomainEvent>>> LoadAdditionalEvents(string aggregateId, long sequence)
+            public override Task<List<EventStoreRecord<DomainEvent>>> LoadAdditionalEvents(string aggregateId, long sequence, long pivot)
                 => Task.FromResult(_additionalEvents);
         }
     }
