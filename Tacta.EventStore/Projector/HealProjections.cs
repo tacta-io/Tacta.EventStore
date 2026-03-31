@@ -24,18 +24,18 @@ namespace Tacta.EventStore.Projector
             _auditRepository = auditRepository;
         }
 
-        public async Task TryHeal(List<long> skippedSequences, CancellationToken cancellationToken)
+        public async Task TryHeal(List<long> skippedSequences, long pivot, CancellationToken cancellationToken)
         {
             //Fetch distinct aggregate ids by skipped sequences 
-            var aggregateIds = await _eventStoreRepository.GetDistinctAggregateIds(skippedSequences, cancellationToken).ConfigureAwait(false);
+            var aggregateIdsWithSequences = await _eventStoreRepository.GetDistinctAggregateIdsWithSequence(skippedSequences, cancellationToken).ConfigureAwait(false);
 
             var allEvents = new List<EventStoreRecord<DomainEvent>>();
 
-            foreach (var aggregateId in aggregateIds)
+            foreach (var (aggregateId, sequence) in aggregateIdsWithSequences)
             {
                 var domainEvents = (await _eventStoreRepository.GetAsync<DomainEvent>(aggregateId, cancellationToken).ConfigureAwait(false)).ToList();
                 domainEvents.ForEach(x => x.Event.WithVersionAndSequence(x.Version, x.Sequence));
-                domainEvents.AddRange(await LoadAdditionalEvents(aggregateId));
+                domainEvents.AddRange(await LoadAdditionalEvents(aggregateId, sequence, pivot));
                 allEvents.AddRange(domainEvents);
             }
 
@@ -59,7 +59,7 @@ namespace Tacta.EventStore.Projector
             }
         }
 
-        public virtual Task<List<EventStoreRecord<DomainEvent>>> LoadAdditionalEvents(string aggregateId)
+        public virtual Task<List<EventStoreRecord<DomainEvent>>> LoadAdditionalEvents(string aggregateId, long sequence, long pivot)
             => Task.FromResult(new List<EventStoreRecord<DomainEvent>>());
     }
 }
