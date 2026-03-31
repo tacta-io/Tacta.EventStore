@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.9.5</Version>
-    <PackageVersion>1.9.5</PackageVersion>
+    <Version>1.9.2-fix-for-govemp</Version>
+    <PackageVersion>1.9.2-fix-for-govemp</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Forwarded pivot to HealProjections and LoadAdditionalEvents</PackageReleaseNotes>
+    <PackageReleaseNotes>Potential fix for govemp</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
