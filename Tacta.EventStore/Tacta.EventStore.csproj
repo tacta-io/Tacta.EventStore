@@ -12,10 +12,10 @@
     <PackageIcon></PackageIcon>
     <PackageProjectUrl>https://tacta.io/</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.9.2-govemp-prerelease</Version>
-    <PackageVersion>1.9.2-govemp-prerelease</PackageVersion>
+    <Version>1.9.2-govemp-prerelease-2</Version>
+    <PackageVersion>1.9.2-govemp-prerelease-2</PackageVersion>
     <Title>Tacta EventStore Library</Title>
-    <PackageReleaseNotes>Cast sequence in GetUntil to int.</PackageReleaseNotes>
+    <PackageReleaseNotes>Using dyanimParams.</PackageReleaseNotes>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>

@@ -167,9 +167,14 @@ namespace Tacta.EventStore.Repository
             if (sequence <= 0)
                 throw new InvalidSequenceException("Sequence cannot be zero or less the zero");
 
-            var param = new { AggregateId = aggregateId, Sequence = (int)sequence };
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("AggregateId", aggregateId, System.Data.DbType.String);
+            parameters.Add("Sequence", checked((int)sequence), System.Data.DbType.Int32);
 
-            return await GetAsync<T>(StoredEvent.SelectUntilSequenceQuery, param, cancellationToken).ConfigureAwait(false);
+            //var param = new { AggregateId = aggregateId, Sequence = (int)sequence };
+
+            return await GetAsync<T>(StoredEvent.SelectUntilSequenceQuery, parameters, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         public async Task<long> GetLatestSequence(CancellationToken cancellationToken = default)
@@ -183,7 +188,27 @@ namespace Tacta.EventStore.Repository
             }, cancellationToken);
         }
 
+        public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string query, DynamicParameters param, CancellationToken cancellationToken = default)
+        {
+            return await _sqlConnectionFactory.ExecuteWithTransactionIfExists<IReadOnlyCollection<EventStoreRecord<T>>>(async (connection, transaction) =>
+            {
+                var storedEvents =
+                     (await connection.QueryAsync<StoredEvent>(query, param, transaction).ConfigureAwait(false))
+                     .ToList().AsReadOnly();
 
+                if (!storedEvents.Any()) return new List<EventStoreRecord<T>>();
+
+                return storedEvents.Select(@event => new EventStoreRecord<T>
+                {
+                    Event = JsonConvert.DeserializeObject<T>(@event.Payload, _jsonSerializerSettings),
+                    AggregateId = @event.AggregateId,
+                    CreatedAt = @event.CreatedAt,
+                    Id = @event.Id,
+                    Version = @event.Version,
+                    Sequence = @event.Sequence
+                }).OrderBy(x => x.Sequence).ToList().AsReadOnly();
+            }, cancellationToken);
+        }
 
         public async Task<IReadOnlyCollection<EventStoreRecord<T>>> GetAsync<T>(string query, object param, CancellationToken cancellationToken = default)
         {
