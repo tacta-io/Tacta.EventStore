@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Dapper;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Dapper;
-using Newtonsoft.Json;
 using Tacta.Connection;
 using Tacta.EventStore.Domain;
 using Tacta.EventStore.Repository.Exceptions;
@@ -167,7 +167,7 @@ namespace Tacta.EventStore.Repository
             if (sequence <= 0)
                 throw new InvalidSequenceException("Sequence cannot be zero or less the zero");
 
-            var param = new { AggregateId = aggregateId, Sequence = sequence };
+            var param = new { AggregateId = aggregateId, Sequence = (int)sequence };
 
             return await GetAsync<T>(StoredEvent.SelectUntilSequenceQuery, param, cancellationToken).ConfigureAwait(false);
         }
